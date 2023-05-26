@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/images">
+        <file>flappy.png</file>
+    </qresource>
+</RCC>
