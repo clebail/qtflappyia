@@ -21,15 +21,16 @@ Common::Common() {
 
     fond.rects.append(QRect(0, 0, 563, 510));
 
-    sol.rects.append(QRect(569, 0, 563, 111));
+    sol.rects.append(QRect(570, 0, 686, 110));
 
     flappy.rects.append(QRect(688, 121, 35, 25));
     flappy.rects.append(QRect(729, 121, 35, 25));
     flappy.rects.append(QRect(771, 121, 35, 25));
+    flappy.rects.append(QRect(729, 121, 35, 25));
 
-    tuyauHaut.rects.append(QRect(568, 117, 322, 510));
+    tuyauHaut.rects.append(QRect(568, 117, 53, 269));
 
-    tuyauBas.rects.append(QRect(624, 117, 241, 510));
+    tuyauBas.rects.append(QRect(624, 117, 53, 240));
 
     sprites.insert(Common::estFond, fond);
     sprites.insert(Common::estSol, sol);

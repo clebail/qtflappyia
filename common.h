@@ -14,7 +14,7 @@ public:
 
     static Common * getInstance();
     QImage getSpritesImage();
-    QImage getSpriteImage(const ESpriteType& type, int idx) const;
+    QImage getSpriteImage(const ESpriteType& type, int idx = 0) const;
     int getNbSpriteImage(const ESpriteType& type) const;
 private:
     Common();

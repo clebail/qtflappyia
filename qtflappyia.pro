@@ -11,11 +11,13 @@ CONFIG += c++11
 SOURCES += \
     common.cpp \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    scenewidget.cpp
 
 HEADERS += \
     common.h \
-    mainwindow.h
+    mainwindow.h \
+    scenewidget.h
 
 FORMS += \
     mainwindow.ui
