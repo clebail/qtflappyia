@@ -5,21 +5,27 @@
 #include <QTimer>
 #include "common.h"
 
+#define MAX_INC 5
+#define INC     2
+
 class Flappy : QObject {
     Q_OBJECT
 
 public:
-    Flappy();
+    Flappy(int y);
+    Flappy(const Flappy& other);
     ~Flappy();
 
+    Flappy& operator=(const Flappy& other);
+
     QImage getImage() const;
+    void next();
+    int getY() const;
 private:
     int idx;
-    QTimer *timer;
+    int y;
+    int inc, nbInc;
     Common *common;
-
-private slots:
-    void onTimer();
 };
 
 #endif // FLAPPY_H
