@@ -10,12 +10,14 @@ CONFIG += c++11
 
 SOURCES += \
     common.cpp \
+    flappy.cpp \
     main.cpp \
     mainwindow.cpp \
     scenewidget.cpp
 
 HEADERS += \
     common.h \
+    flappy.h \
     mainwindow.h \
     scenewidget.h
 
