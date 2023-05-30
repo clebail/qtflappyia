@@ -28,9 +28,9 @@ Common::Common() {
     flappy.rects.append(QRect(771, 121, 35, 25));
     flappy.rects.append(QRect(729, 121, 35, 25));
 
-    tuyauHaut.rects.append(QRect(568, 117, 53, 269));
+    tuyauHaut.rects.append(QRect(568, 117, 53, 389));
 
-    tuyauBas.rects.append(QRect(624, 117, 53, 240));
+    tuyauBas.rects.append(QRect(624, 117, 53, 389));
 
     sprites.insert(Common::estFond, fond);
     sprites.insert(Common::estSol, sol);
@@ -49,4 +49,8 @@ QImage Common::getSpriteImage(const ESpriteType& type, int idx) const {
 
 int Common::getNbSpriteImage(const ESpriteType& type) const {
     return sprites.value(type).rects.size();
+}
+
+QSize Common::getSpriteSize(const ESpriteType& type) const {
+    return sprites.value(type).rects[0].size();
 }

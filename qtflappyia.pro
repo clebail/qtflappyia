@@ -13,13 +13,15 @@ SOURCES += \
     flappy.cpp \
     main.cpp \
     mainwindow.cpp \
-    scenewidget.cpp
+    scenewidget.cpp \
+    tuyau.cpp
 
 HEADERS += \
     common.h \
     flappy.h \
     mainwindow.h \
-    scenewidget.h
+    scenewidget.h \
+    tuyau.h
 
 FORMS += \
     mainwindow.ui

@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QTimer>
 #include "flappy.h"
+#include "tuyau.h"
 
 #define SOL_OFFSET      13
 
@@ -12,6 +13,7 @@ class SceneWidget : public QWidget {
 public:
     explicit SceneWidget(QWidget *parent = nullptr);
     void setFlappys(const QList<Flappy *>& flappys);
+    void setTuyaux(const QList<Tuyau *>& tuyaux);
     int getYSol() const;
     ~SceneWidget();
 
@@ -23,8 +25,9 @@ private:
     QImage fond;
     QImage sol;
     QTimer *timerSol;
-    int xSol, ySol;
+    int xSol, ySol, xTuyau;
     QList<Flappy *> flappys;
+    QList<Tuyau *> tuyaux;
 
 private slots:
     void onTimerSol();

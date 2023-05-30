@@ -22,6 +22,10 @@ void SceneWidget::setFlappys(const QList<Flappy *>& flappys) {
     this->flappys = flappys;
 }
 
+void SceneWidget::setTuyaux(const QList<Tuyau *>& tuyaux) {
+    this->tuyaux = tuyaux;
+}
+
 int SceneWidget::getYSol() const {
     return ySol;
 }
@@ -36,6 +40,12 @@ void SceneWidget::paintEvent(QPaintEvent *) {
 
     painter.drawImage(QPoint(0, 0), fond, QRect(0, 0, fond.width(), fond.height()));
     painter.drawImage(QRect(0, ySol, width(), sol.height()), sol, QRect(xSol, 0, width(), sol.height()));
+
+    for(int i=0;i<tuyaux.size();i++) {
+        QImage img = tuyaux[i]->getImage();
+        QSize size = tuyaux[i]->getSize();
+        painter.drawImage(QPoint(tuyaux[i]->getX(), tuyaux[i]->getY()), img, QRect(0, 0, size.width(), size.height()));
+    }
 
     for(int i=0;i<flappys.size();i++) {
         QImage img = flappys[i]->getImage();
@@ -57,10 +67,30 @@ void SceneWidget::resizeEvent(QResizeEvent *event) {
 }
 
 void SceneWidget::onTimerSol() {
+    int yT =  (rand() % 279) + 121; //FIXME
+
     xSol = (xSol + 1) % SOL_OFFSET;
 
     for(int i=0;i<flappys.size();i++) {
         flappys[i]->next();
+    }
+
+    if(tuyaux.size() == 2) {
+        if(tuyaux[0]->getX() <= (282 - tuyaux[0]->getSize().width() / 2)) {
+            tuyaux << new Tuyau(Common::estTuyauBas, 563, yT);
+            tuyaux << new Tuyau(Common::estTuyauHaut, 563, yT);
+        }
+    }
+
+    for(int i=0;i<tuyaux.size();i++) {
+        int limite = -tuyaux[i]->getSize().width();
+
+        if(tuyaux[i]->getX() > limite) {
+            tuyaux[i]->next();
+        } else {
+            tuyaux[i]->setX(width());
+            tuyaux[i]->setY(yT);
+        }
     }
 
     repaint();

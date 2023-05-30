@@ -3,6 +3,7 @@
 #include "common.h"
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
+    int yT;
     setupUi(this);
 
     timer=new QTimer(this);
@@ -10,11 +11,16 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     connect(timer, SIGNAL(timeout()), this, SLOT(onTimer()));
     timer->start();
 
+    yT = (rand() % 279) + 121; //FIXME
+
     flappys << new Flappy(255, sceneWidget->getYSol()); //Fixme
-    //flappys << new Flappy(200, sceneWidget->getYSol()); //Fixme
-    //flappys << new Flappy(145, sceneWidget->getYSol()); //Fixme
-    //flappys << new Flappy(90, sceneWidget->getYSol()); //Fixme
     sceneWidget->setFlappys(flappys);
+
+
+    tuyaux << new Tuyau(Common::estTuyauBas, 563, yT);
+    tuyaux << new Tuyau(Common::estTuyauHaut, 563, yT);
+    sceneWidget->setTuyaux(tuyaux);
+
     connect(sceneWidget, SIGNAL(ysolChange(int)), this, SLOT(onYsolChange(int)));
 
     qApp->installEventFilter(this);

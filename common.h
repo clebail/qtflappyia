@@ -18,6 +18,7 @@ public:
     QImage getSpritesImage();
     QImage getSpriteImage(const ESpriteType& type, int idx = 0) const;
     int getNbSpriteImage(const ESpriteType& type) const;
+    QSize getSpriteSize(const ESpriteType& type) const;
 private:
     Common();
 

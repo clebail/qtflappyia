@@ -17,6 +17,7 @@ public:
 private:
     QTimer *timer;
     QList<Flappy *> flappys;
+    QList<Tuyau *> tuyaux;
 
 private slots:
     void onTimer();
