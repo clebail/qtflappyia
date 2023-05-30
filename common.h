@@ -4,6 +4,8 @@
 #include <QtDebug>
 #include <QImage>
 
+#define PI  3.14159
+
 class Common {
 public:
     typedef enum { estFond, estSol, estFlappy, estTuyauHaut, estTuyauBas } ESpriteType;
