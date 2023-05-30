@@ -60,7 +60,7 @@ void Flappy::next() {
             onUp = false;
             onDown = true;
         } else {
-            y -= INC_UP;
+            y = qMax(y - INC_UP, 0);
             angle = qMax(angle - ANGLE_STEP_UP, ANGLE_UP_MAX);
         }
     } else if(onDown) {
