@@ -65,7 +65,7 @@ void Flappy::next() {
         }
     } else if(onDown) {
         idx = 1;
-        y = qMin(y + INC_DOWN, ySol);
+        y = qMin(y + INC_DOWN, ySol - 20);
         angle = qMin(angle + ANGLE_STEP_DOWN, ANGLE_DOWN_MAX);
     }
 }

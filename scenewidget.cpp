@@ -39,7 +39,6 @@ void SceneWidget::paintEvent(QPaintEvent *) {
     QPainter painter(this);
 
     painter.drawImage(QPoint(0, 0), fond, QRect(0, 0, fond.width(), fond.height()));
-    painter.drawImage(QRect(0, ySol, width(), sol.height()), sol, QRect(xSol, 0, width(), sol.height()));
 
     for(int i=0;i<tuyaux.size();i++) {
         QImage img = tuyaux[i]->getImage();
@@ -59,6 +58,8 @@ void SceneWidget::paintEvent(QPaintEvent *) {
         painter.drawImage(QPoint(-ox, -oy), img, QRect(0, 0, img.width(), img.height()));
         painter.restore();
     }
+
+    painter.drawImage(QRect(0, ySol, width(), sol.height()), sol, QRect(xSol, 0, width(), sol.height()));
 }
 
 void SceneWidget::resizeEvent(QResizeEvent *event) {
