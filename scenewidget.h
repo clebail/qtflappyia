@@ -2,7 +2,6 @@
 #define SCENEWIDGET_H
 
 #include <QWidget>
-#include <QTimer>
 #include "flappy.h"
 #include "tuyau.h"
 
@@ -15,6 +14,9 @@ public:
     void setFlappys(const QList<Flappy *>& flappys);
     void setTuyaux(const QList<Tuyau *>& tuyaux);
     int getYSol() const;
+    int getXSol() const;
+    void setXSol(int xSol);
+
     ~SceneWidget();
 
 protected:
@@ -24,13 +26,9 @@ protected:
 private:
     QImage fond;
     QImage sol;
-    QTimer *timerSol;
     int xSol, ySol, xTuyau;
     QList<Flappy *> flappys;
     QList<Tuyau *> tuyaux;
-
-private slots:
-    void onTimerSol();
 
 signals:
     void ysolChange(int ySol);

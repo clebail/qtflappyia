@@ -9,13 +9,8 @@ SceneWidget::SceneWidget(QWidget *parent) : QWidget(parent) {
     fond = c->getSpriteImage(Common::estFond);
     sol = c->getSpriteImage(Common::estSol);
 
-    timerSol = new QTimer(this);
-    timerSol->setInterval(10);
-    connect(timerSol, SIGNAL(timeout()), this, SLOT(onTimerSol()));
-    timerSol->start();
-
     xSol = 0;
-    ySol = height()-sol.height();
+    ySol = height() - SOL_HEIGHT;
 }
 
 void SceneWidget::setFlappys(const QList<Flappy *>& flappys) {
@@ -30,9 +25,15 @@ int SceneWidget::getYSol() const {
     return ySol;
 }
 
+int SceneWidget::getXSol() const {
+    return xSol;
+}
+
+void SceneWidget::setXSol(int xSol) {
+    this->xSol = xSol;
+}
+
 SceneWidget::~SceneWidget() {
-    timerSol->stop();
-    delete timerSol;
 }
 
 void SceneWidget::paintEvent(QPaintEvent *) {
@@ -43,56 +44,42 @@ void SceneWidget::paintEvent(QPaintEvent *) {
     for(int i=0;i<tuyaux.size();i++) {
         QImage img = tuyaux[i]->getImage();
         QSize size = tuyaux[i]->getSize();
-        painter.drawImage(QPoint(tuyaux[i]->getX(), tuyaux[i]->getY()), img, QRect(0, 0, size.width(), size.height()));
+        painter.drawImage(QPoint(tuyaux[i]->getX(), tuyaux[i]->getY()), img, QRect(0, 0, size.width(), TUYAU_HEIGHT));
     }
 
     for(int i=0;i<flappys.size();i++) {
-        QImage img = flappys[i]->getImage();
-        int ox = img.width() / 2;
-        int oy = img.height() / 2;
+        Flappy *f = flappys[i];
+        QImage img = f->getImage();
+        QList<QPair<QPoint, QPoint>> sensors = f->getSensors(tuyaux);
+
+        int ox = FLAPPY_WIDTH / 2;
+        int oy = FLAPPY_HEIGHT / 2;
 
         painter.save();
-        painter.translate(QPoint(150 + ox, flappys[i]->getY() + oy));
-        painter.rotate(flappys[i]->getAngle());
+        painter.translate(QPoint(f->getX() + ox, f->getY() + oy));
+        painter.rotate(f->getAngle());
 
-        painter.drawImage(QPoint(-ox, -oy), img, QRect(0, 0, img.width(), img.height()));
+        // painter.drawRect(QRect(-ox, -oy, FLAPPY_WIDTH, img.height()));
+        painter.drawImage(QPoint(-ox, -oy), img, QRect(0, 0, FLAPPY_WIDTH, img.height()));
         painter.restore();
+
+        painter.setPen(QColorConstants::Red);
+        // painter.drawEllipse(f->getTop(), 5, 5);
+        painter.drawEllipse(f->getTopRight(), 5, 5);
+        painter.drawEllipse(f->getRight(), 5, 5);
+        painter.drawEllipse(f->getBotomRight(), 5, 5);
+        // painter.drawEllipse(f->getBotom(), 5, 5);
+
+        for(int j=0;j<sensors.size();j++) {
+            QPair<QPoint, QPoint> p = sensors[j];
+            painter.drawLine(p.first, p.second);
+        }
     }
 
-    painter.drawImage(QRect(0, ySol, width(), sol.height()), sol, QRect(xSol, 0, width(), sol.height()));
+    painter.drawImage(QRect(0, ySol, width(), SOL_HEIGHT), sol, QRect(xSol, 0, width(), SOL_HEIGHT));
 }
 
 void SceneWidget::resizeEvent(QResizeEvent *event) {
-    ySol = event->size().height()-sol.height();
+    ySol = event->size().height() - SOL_HEIGHT;
     emit(ysolChange(ySol));
-}
-
-void SceneWidget::onTimerSol() {
-    int yT =  (rand() % 279) + 121; //FIXME
-
-    xSol = (xSol + 1) % SOL_OFFSET;
-
-    for(int i=0;i<flappys.size();i++) {
-        flappys[i]->next();
-    }
-
-    if(tuyaux.size() == 2) {
-        if(tuyaux[0]->getX() <= (282 - tuyaux[0]->getSize().width() / 2)) {
-            tuyaux << new Tuyau(Common::estTuyauBas, 563, yT);
-            tuyaux << new Tuyau(Common::estTuyauHaut, 563, yT);
-        }
-    }
-
-    for(int i=0;i<tuyaux.size();i++) {
-        int limite = -tuyaux[i]->getSize().width();
-
-        if(tuyaux[i]->getX() > limite) {
-            tuyaux[i]->next();
-        } else {
-            tuyaux[i]->setX(width());
-            tuyaux[i]->setY(yT);
-        }
-    }
-
-    repaint();
 }

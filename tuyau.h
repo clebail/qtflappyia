@@ -14,8 +14,10 @@ public:
     void setY(int y);
     int getX() const;
     void setX(int x);
+
     QImage getImage() const;
     QSize getSize() const;
+    Common::ESpriteType getType() const;
 private:
     Common *common;
     Common::ESpriteType type;

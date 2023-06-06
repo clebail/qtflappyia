@@ -5,6 +5,8 @@
 #include <QTimer>
 #include "ui_mainwindow.h"
 
+
+
 class MainWindow : public QMainWindow, private Ui::MainWindow
 {
     Q_OBJECT
@@ -18,6 +20,8 @@ private:
     QTimer *timer;
     QList<Flappy *> flappys;
     QList<Tuyau *> tuyaux;
+    int xSol;
+    int calculYT() const;
 
 private slots:
     void onTimer();
