@@ -9,11 +9,19 @@ Flappy::Flappy(int x, int y, int ySol) {
     this->ySol = ySol;
     this->inc = INC * (rand() % 2 == 1 ? 1 : -1);
     this->nbInc = rand() % MAX_INC;
-	this->idx = rand() % common->getNbSpriteImage(Common::estFlappy);
+    this->idx = rand() % common->getNbSpriteImage(Common::estFlappy);
     this->angle = 0;
     this->onUp = this->onDown = false;
     this->idNext = 0;
+    this->nbCycleUp = 0;
     this->score = 0;
+    this->dead = false;
+    this->age = 0;
+    this->nbSauts = 0;
+    for (int i = 0; i < FLAPPY_NB_HIDDEN; i++) {
+        neuronesCaches[i] = new CNeurone(FLAPPY_NB_INPUTS + 1);
+    }
+    neuroneSortie = new CNeurone(FLAPPY_NB_HIDDEN + 1);
 }
 
 Flappy::Flappy(const Flappy& other) : Flappy(other.x, other.y, other.ySol) {
@@ -25,9 +33,19 @@ Flappy::Flappy(const Flappy& other) : Flappy(other.x, other.y, other.ySol) {
     this->onDown = other.onDown;
     this->idNext = other.idNext;
     this->score = other.score;
+    this->dead = other.dead;
+    this->age = other.age;
+    for (int i = 0; i < FLAPPY_NB_HIDDEN; i++) {
+        neuronesCaches[i]->copyFrom(*other.neuronesCaches[i]);
+    }
+    neuroneSortie->copyFrom(*other.neuroneSortie);
 }
 
 Flappy::~Flappy() {
+    for (int i = 0; i < FLAPPY_NB_HIDDEN; i++) {
+        delete neuronesCaches[i];
+    }
+    delete neuroneSortie;
 }
 
 Flappy& Flappy::operator=(const Flappy& other) {
@@ -93,6 +111,7 @@ void Flappy::up() {
     nbCycleUp = 0;
     onUp = true;
     onDown = false;
+    nbSauts++;
 }
 
 void Flappy::setYSol(int ySol) {
@@ -157,47 +176,179 @@ QPoint Flappy::getBotom() const {
     return result;
 }
 
+void Flappy::think(QList<Tuyau *> tuyaux) {
+    if (dead) return;
+
+    QList<QPair<QPoint, QPoint>> sensors = getSensors(tuyaux);
+    double inputs[FLAPPY_NB_INPUTS];
+    double maxDist = sqrt((double)(SCENE_WIDTH * SCENE_WIDTH + SCENE_HEIGHT * SCENE_HEIGHT));
+    for (int i = 0; i < FLAPPY_NB_INPUTS; i++) {
+        double dx = sensors[i].second.x() - sensors[i].first.x();
+        double dy = sensors[i].second.y() - sensors[i].first.y();
+        inputs[i] = sqrt(dx*dx + dy*dy) / maxDist;
+    }
+
+    // Couche cachée
+    double hiddenOut[FLAPPY_NB_HIDDEN];
+    for (int i = 0; i < FLAPPY_NB_HIDDEN; i++) {
+        neuronesCaches[i]->setInputs(inputs);
+        hiddenOut[i] = neuronesCaches[i]->eval(PENTE_NEURONE);
+    }
+
+    // Neurone de sortie
+    neuroneSortie->setInputs(hiddenOut);
+    if (neuroneSortie->eval(PENTE_NEURONE) >= neuroneSortie->getSeuil() && !onUp) {
+        up();
+    }
+
+    age++;
+}
+
+void Flappy::from(Flappy *f1, Flappy *f2) {
+    for (int i = 0; i < FLAPPY_NB_HIDDEN; i++) {
+        int s = rand() % neuronesCaches[i]->getNbGene();
+        neuronesCaches[i]->from(*f1->neuronesCaches[i], *f2->neuronesCaches[i], s);
+        if (rand() % 100 < TAUX_MUTATION) {
+            neuronesCaches[i]->mute(rand() % neuronesCaches[i]->getNbGene());
+        }
+    }
+    int s = rand() % neuroneSortie->getNbGene();
+    neuroneSortie->from(*f1->neuroneSortie, *f2->neuroneSortie, s);
+    if (rand() % 100 < TAUX_MUTATION) {
+        neuroneSortie->mute(rand() % neuroneSortie->getNbGene());
+    }
+}
+
+void Flappy::reset(int x, int y, int ySol) {
+    this->x = x;
+    this->y = y;
+    this->ySol = ySol;
+    this->inc = INC * (rand() % 2 == 1 ? 1 : -1);
+    this->nbInc = rand() % MAX_INC;
+    this->idx = rand() % common->getNbSpriteImage(Common::estFlappy);
+    this->angle = 0;
+    this->onUp = this->onDown = false;
+    this->idNext = 0;
+    this->nbCycleUp = 0;
+    this->score = 0;
+    this->dead = false;
+    this->age = 0;
+    this->nbSauts = 0;
+}
+
+bool Flappy::isDead() const {
+    return dead;
+}
+
+void Flappy::markDead() {
+    dead = true;
+}
+
+int Flappy::getFitness() const {
+    if (nbSauts == 0) return -1;
+    return score * 100000 + age;
+}
+
+bool Flappy::toucheUnTuyau(QList<Tuyau *> tuyaux) const {
+    const int m = 4;
+    QRect birdRect(x + m, y + m, FLAPPY_WIDTH - 2*m, FLAPPY_HEIGHT - 2*m);
+    for (Tuyau *t : tuyaux) {
+        QSize ts = t->getSize();
+        QRect pipeRect(t->getX(), t->getY(), ts.width(), TUYAU_HEIGHT);
+        if (birdRect.intersects(pipeRect)) return true;
+    }
+    return false;
+}
+
+QPoint Flappy::raycast(QPoint start, double angleDeg, QList<Tuyau *> tuyaux) const {
+    double rad = angleDeg * PI / 180.0;
+    double dx = cos(rad);
+    double dy = sin(rad);
+    double minT = SCENE_WIDTH + SCENE_HEIGHT;
+    double ex = start.x(), ey = start.y();
+
+    // Bords de l'écran
+    if (dy > 1e-6) {
+        double t = (ySol - start.y()) / dy;
+        if (t > 0 && t < minT) { minT = t; ex = start.x() + t*dx; ey = ySol; }
+    } else if (dy < -1e-6) {
+        double t = -start.y() / dy;
+        if (t > 0 && t < minT) { minT = t; ex = start.x() + t*dx; ey = 0; }
+    }
+    if (dx > 1e-6) {
+        double t = (SCENE_WIDTH - start.x()) / dx;
+        if (t > 0 && t < minT) { minT = t; ex = SCENE_WIDTH; ey = start.y() + t*dy; }
+    }
+
+    // Intersection avec les tuyaux
+    for (Tuyau *tp : tuyaux) {
+        QSize ts = tp->getSize();
+        int px = tp->getX(), pw = ts.width();
+
+        if (tp->getType() == Common::estTuyauHaut) {
+            int yBot = tp->getY() + TUYAU_HEIGHT;
+            // Bord bas du tuyau haut
+            if (qAbs(dy) > 1e-6) {
+                double t = (yBot - start.y()) / dy;
+                if (t > 0 && t < minT) {
+                    double xh = start.x() + t*dx;
+                    if (xh >= px && xh <= px + pw) { minT = t; ex = xh; ey = yBot; }
+                }
+            }
+            // Bord gauche et droit
+            if (qAbs(dx) > 1e-6) {
+                for (int edge : {px, px + pw}) {
+                    double t = (edge - start.x()) / dx;
+                    if (t > 0 && t < minT) {
+                        double yh = start.y() + t*dy;
+                        if (yh >= tp->getY() && yh <= yBot) { minT = t; ex = edge; ey = yh; }
+                    }
+                }
+            }
+        }
+
+        if (tp->getType() == Common::estTuyauBas) {
+            int yTop = tp->getY();
+            // Bord haut du tuyau bas
+            if (qAbs(dy) > 1e-6) {
+                double t = (yTop - start.y()) / dy;
+                if (t > 0 && t < minT) {
+                    double xh = start.x() + t*dx;
+                    if (xh >= px && xh <= px + pw) { minT = t; ex = xh; ey = yTop; }
+                }
+            }
+            // Bord gauche et droit
+            if (qAbs(dx) > 1e-6) {
+                for (int edge : {px, px + pw}) {
+                    double t = (edge - start.x()) / dx;
+                    if (t > 0 && t < minT) {
+                        double yh = start.y() + t*dy;
+                        if (yh >= yTop) { minT = t; ex = edge; ey = yh; }
+                    }
+                }
+            }
+        }
+    }
+
+    return QPoint((int)ex, (int)ey);
+}
+
 QList<QPair<QPoint, QPoint>> Flappy::getSensors(QList<Tuyau *> tuyaux) const {
     QList<QPair<QPoint, QPoint>> result;
-    QPoint ptr = getTopRight();
-    QPoint pr = getRight();
-    QPoint pbr = getBotomRight();
-    QPair<QPoint, QPoint> pairH;
-    QPair<QPoint, QPoint> pairD;
-    QPair<QPoint, QPoint> pairB;
+    QPoint topRight = getTopRight();
+    QPoint right    = getRight();
+    QPoint botRight = getBotomRight();
 
-    for(int i=0;i<tuyaux.size();i++) {
-        Tuyau *t = tuyaux[i];
-        QSize ts = t->getSize();
-
-        if(t->getType() == Common::estTuyauHaut && ptr.x() >= t->getX() && ptr.x() <= t->getX() + ts.width() && ptr.y() >= t->getY() + ts.height()) {
-            pairH = QPair<QPoint, QPoint>(ptr, QPoint(ptr.x(), t->getY() + ts.height()));
-        }
-
-        if(t->getType() == Common::estTuyauBas && pbr.x() >= t->getX() && pbr.x() <= t->getX() + ts.width() && pbr.y() <= t->getY()) {
-            pairB = QPair<QPoint, QPoint>(pbr, QPoint(pbr.x(), t->getY()));
-        }
-
-        if(pairD.first.isNull() && pr.x() <= t->getX() && ((t->getType() == Common::estTuyauHaut && pr.y() <= t->getY() + ts.height()) || (t->getType() == Common::estTuyauBas && pr.y() >= t->getY()))) {
-            pairD = QPair<QPoint, QPoint>(pr, QPoint(t->getX(), pr.y()));
-        }
+    // 9 rayons de -90° à +90° répartis équitablement (pas de 22.5°)
+    // Les rayons vers le haut partent du coin supérieur droit,
+    // vers le bas du coin inférieur droit, à l'horizontale du centre droit.
+    // Ainsi le piaf « connaît » ses propres bords et ne sous-estime pas les collisions.
+    for (int i = 0; i < FLAPPY_NB_INPUTS; i++) {
+        double angle = -90.0 + i * (180.0 / (FLAPPY_NB_INPUTS - 1));
+        QPoint origin = (angle < 0) ? topRight : (angle > 0) ? botRight : right;
+        QPoint endpoint = raycast(origin, angle, tuyaux);
+        result.append(QPair<QPoint, QPoint>(origin, endpoint));
     }
-
-    if(pairH.first.isNull()) {
-        pairH = QPair<QPoint, QPoint>(ptr, QPoint(ptr.x(), 0));
-    }
-
-    if(pairB.first.isNull()) {
-        pairB = QPair<QPoint, QPoint>(pbr, QPoint(pbr.x(), ySol));
-    }
-
-    if(pairD.first.isNull()) {
-        pairD = QPair<QPoint, QPoint>(pr, QPoint(SCENE_WIDTH, pr.y()));
-    }
-
-    result.append(pairH);
-    result.append(pairD);
-    result.append(pairB);
 
     return result;
 }

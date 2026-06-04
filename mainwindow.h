@@ -4,27 +4,27 @@
 #include <QMainWindow>
 #include <QTimer>
 #include "ui_mainwindow.h"
+#include "CGenetic.h"
 
-
-
-class MainWindow : public QMainWindow, private Ui::MainWindow
-{
+class MainWindow : public QMainWindow, private Ui::MainWindow {
     Q_OBJECT
 
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-    virtual bool eventFilter(QObject *object, QEvent *event);
 
 private:
     QTimer *timer;
-    QList<Flappy *> flappys;
+    CGenetic *ga;
     QList<Tuyau *> tuyaux;
     int xSol;
+
     int calculYT() const;
+    void resetTuyaux();
 
 private slots:
     void onTimer();
     void onYsolChange(int ySol);
 };
+
 #endif // MAINWINDOW_H

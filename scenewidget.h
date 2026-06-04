@@ -16,8 +16,10 @@ public:
     int getYSol() const;
     int getXSol() const;
     void setXSol(int xSol);
-
     ~SceneWidget();
+
+public slots:
+    void setShowSensors(bool show);
 
 protected:
     virtual void paintEvent(QPaintEvent *);
@@ -27,6 +29,7 @@ private:
     QImage fond;
     QImage sol;
     int xSol, ySol, xTuyau;
+    bool showSensors;
     QList<Flappy *> flappys;
     QList<Tuyau *> tuyaux;
 

@@ -11,6 +11,7 @@ SceneWidget::SceneWidget(QWidget *parent) : QWidget(parent) {
 
     xSol = 0;
     ySol = height() - SOL_HEIGHT;
+    showSensors = false;
 }
 
 void SceneWidget::setFlappys(const QList<Flappy *>& flappys) {
@@ -33,6 +34,10 @@ void SceneWidget::setXSol(int xSol) {
     this->xSol = xSol;
 }
 
+void SceneWidget::setShowSensors(bool show) {
+    showSensors = show;
+}
+
 SceneWidget::~SceneWidget() {
 }
 
@@ -47,32 +52,34 @@ void SceneWidget::paintEvent(QPaintEvent *) {
         painter.drawImage(QPoint(tuyaux[i]->getX(), tuyaux[i]->getY()), img, QRect(0, 0, size.width(), TUYAU_HEIGHT));
     }
 
+    bool firstAlive = true;
+    int ox = FLAPPY_WIDTH / 2;
+    int oy = FLAPPY_HEIGHT / 2;
+
     for(int i=0;i<flappys.size();i++) {
         Flappy *f = flappys[i];
-        QImage img = f->getImage();
-        QList<QPair<QPoint, QPoint>> sensors = f->getSensors(tuyaux);
+        if (f->isDead()) continue;
 
-        int ox = FLAPPY_WIDTH / 2;
-        int oy = FLAPPY_HEIGHT / 2;
+        QImage img = f->getImage();
 
         painter.save();
         painter.translate(QPoint(f->getX() + ox, f->getY() + oy));
         painter.rotate(f->getAngle());
-
-        // painter.drawRect(QRect(-ox, -oy, FLAPPY_WIDTH, img.height()));
         painter.drawImage(QPoint(-ox, -oy), img, QRect(0, 0, FLAPPY_WIDTH, img.height()));
         painter.restore();
 
-        painter.setPen(QColorConstants::Red);
-        // painter.drawEllipse(f->getTop(), 5, 5);
-        painter.drawEllipse(f->getTopRight(), 5, 5);
-        painter.drawEllipse(f->getRight(), 5, 5);
-        painter.drawEllipse(f->getBotomRight(), 5, 5);
-        // painter.drawEllipse(f->getBotom(), 5, 5);
-
-        for(int j=0;j<sensors.size();j++) {
-            QPair<QPoint, QPoint> p = sensors[j];
-            painter.drawLine(p.first, p.second);
+        // Capteurs uniquement pour le premier piaf vivant, si activés
+        if (firstAlive && showSensors) {
+            firstAlive = false;
+            QList<QPair<QPoint, QPoint>> sensors = f->getSensors(tuyaux);
+            painter.setPen(QColorConstants::Red);
+            painter.drawEllipse(f->getTopRight(), 4, 4);
+            painter.drawEllipse(f->getRight(), 4, 4);
+            painter.drawEllipse(f->getBotomRight(), 4, 4);
+            for(int j=0;j<sensors.size();j++) {
+                QPair<QPoint, QPoint> p = sensors[j];
+                painter.drawLine(p.first, p.second);
+            }
         }
     }
 

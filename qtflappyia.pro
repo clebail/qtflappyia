@@ -9,6 +9,9 @@ CONFIG += c++11
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    CCapteur.cpp \
+    CGenetic.cpp \
+    CNeurone.cpp \
     common.cpp \
     flappy.cpp \
     main.cpp \
@@ -17,6 +20,9 @@ SOURCES += \
     tuyau.cpp
 
 HEADERS += \
+    CCapteur.h \
+    CGenetic.h \
+    CNeurone.h \
     common.h \
     flappy.h \
     mainwindow.h \

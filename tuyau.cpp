@@ -6,7 +6,7 @@ Tuyau::Tuyau(const Common::ESpriteType &type, int x, int y) {
     this->x = x;
     this->y = y;
     if(type == Common::estTuyauHaut) {
-        this->y -= TUYAU_HEIGHT + 100;
+        this->y -= TUYAU_HEIGHT + TUYAU_GAP;
     }
 
 }
@@ -22,7 +22,7 @@ int Tuyau::getY() const {
 void Tuyau::setY(int y) {
     this->y = y;
     if(type == Common::estTuyauHaut) {
-        this->y -= TUYAU_HEIGHT + 100;
+        this->y -= TUYAU_HEIGHT + TUYAU_GAP;
     }
 }
 

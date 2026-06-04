@@ -5,9 +5,19 @@
 #include <QImage>
 
 #define PI                  3.14159
+
+// IA
+#define FLAPPY_START_X      150
+#define FLAPPY_START_Y      255
+#define PENTE_NEURONE       0.01
+#define TAILLE_POPULATION   100
+#define TAUX_MUTATION       25
+#define FLAPPY_NB_INPUTS    9
+#define FLAPPY_NB_HIDDEN    4
 #define SCENE_WIDTH         563
 #define SCENE_HEIGHT        510
 #define TUYAU_HEIGHT        389
+#define TUYAU_GAP           120
 #define SOL_HEIGHT          110
 #define FLAPPY_WIDTH        35
 #define FLAPPY_HEIGHT       25
