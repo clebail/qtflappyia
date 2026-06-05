@@ -76,6 +76,8 @@ void SceneWidget::paintEvent(QPaintEvent *) {
             painter.drawEllipse(f->getTopRight(), 4, 4);
             painter.drawEllipse(f->getRight(), 4, 4);
             painter.drawEllipse(f->getBotomRight(), 4, 4);
+            painter.drawEllipse(f->getTopLeft(), 4, 4);
+            painter.drawEllipse(f->getBotomLeft(), 4, 4);
             for(int j=0;j<sensors.size();j++) {
                 QPair<QPoint, QPoint> p = sensors[j];
                 painter.drawLine(p.first, p.second);

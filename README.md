@@ -1,14 +1,14 @@
 # FlappyIA — Apprendre à voler par évolution
 
 Ce projet apprend à un piaf à **traverser des tuyaux tout seul**, sans jamais lui expliquer
-quand sauter. Personne ne programme « saute ici » ou « attends encore un peu » : les oiseaux
+quand battre des ailes. Personne ne programme « bats des ailes ici » ou « attends encore un peu » : les oiseaux
 partent de zéro, la grande majorité chute immédiatement… puis, génération après génération,
 une population entière finit par naviguer entre les tuyaux.
 
 Le tout repose sur deux idées :
 
 - un **réseau de neurones** sert de cerveau à chaque piaf (il transforme ce qu'il perçoit en
-  une décision : sauter ou ne pas sauter) ;
+  une décision : battre des ailes ou non) ;
 - un **algorithme génétique** joue le rôle de la sélection naturelle (les meilleurs se
   reproduisent, les pires disparaissent).
 
@@ -21,43 +21,47 @@ de lui, et il doit décider quoi faire.
 
 ### Ce qu'il perçoit (les entrées)
 
-Le piaf lance **9 rayons** depuis son côté droit, répartis uniformément de −90° (vers le
-haut) à +90° (vers le bas), par pas de 22,5°. Chaque rayon avance jusqu'à toucher :
+Le piaf lance **9 rayons vers l'avant** depuis son côté droit, répartis uniformément de
+−90° (vers le haut) à +90° (vers le bas), par pas de 22,5°, plus **2 rayons verticaux vers
+l'arrière** (un vers le haut, un vers le bas) partant de sa queue. Chaque rayon avance
+jusqu'à toucher :
 
 - le bord inférieur d'un tuyau du haut,
 - le bord supérieur d'un tuyau du bas,
 - ou une limite de l'écran.
 
-La **longueur de chaque rayon**, normalisée, constitue une des 9 entrées du réseau. Plus un
-rayon est court, plus un obstacle est proche dans cette direction.
+La **longueur de chaque rayon**, normalisée, constitue une des **11 entrées** du réseau.
+Plus un rayon est court, plus un obstacle est proche dans cette direction. Les 2 rayons
+arrière permettent au piaf de « sentir » un tuyau juste au-dessus ou au-dessous de sa
+queue, pour ne plus s'y cogner l'arrière après l'avoir dépassé de justesse.
 
 ```
-        ↑  (-90°)
-      ↗    (-67,5°)
-    ↗      (-45°)
-   ↗       (-22,5°)
-→           (0°)
-   ↘       (+22,5°)
-    ↘      (+45°)
-      ↘    (+67,5°)
-        ↓  (+90°)
+   ↑    ↑  (-90°)         ↑ = rayons avant (côté droit)
+   ┊  ↗    (-67,5°)       ┊ = rayons arrière verticaux (queue)
+   ┊ ↗     (-45°)
+   ┊↗      (-22,5°)
+   🐤→      (0°)
+   ┊↘      (+22,5°)
+   ┊ ↘     (+45°)
+   ┊  ↘    (+67,5°)
+   ↓    ↓  (+90°)
 ```
 
 ### Ce qu'il décide (la sortie)
 
-Le cerveau produit **une seule décision** à chaque instant : sauter ou ne pas sauter. La
+Le cerveau produit **une seule décision** à chaque instant : battre des ailes ou non. La
 décision est prise par un neurone de sortie dont la valeur (comprise entre 0 et 1) est
 comparée à un seuil. Si elle dépasse ce seuil, le piaf bat des ailes.
 
-Une contrainte physique s'applique : le piaf ne peut pas sauter en pleine montée. Il doit
-terminer son élan avant de pouvoir rebondir, ce qui force des rythmes de saut naturels
+Une contrainte physique s'applique : le piaf ne peut pas battre des ailes en pleine montée. Il doit
+terminer son élan avant de pouvoir rebondir, ce qui force des rythmes de battement d'ailes naturels
 plutôt que des mises à puissance continue.
 
 ---
 
 ## La physique du vol
 
-- **Saut** : à l'impulsion, le piaf monte à raison de 1 pixel par tick pendant 40 ticks,
+- **Battement d'ailes** : à l'impulsion, le piaf monte à raison de 1 pixel par tick pendant 40 ticks,
   en s'inclinant progressivement jusqu'à −30°.
 - **Chute** : après les 40 ticks, il redescend à 2 pixels par tick, en basculant vers +90°.
 - **Ouverture** : l'espace entre les deux tuyaux fait 120 pixels. Le piaf mesure 35×25 px
@@ -76,7 +80,7 @@ Une génération se déroule ainsi :
 1. **Épreuve.** Les 100 piafs sont lâchés en même temps sur le même niveau. Chacun vole
    avec son propre cerveau jusqu'à toucher un tuyau, le sol ou le plafond.
 2. **Notation.** Chaque piaf reçoit un **score de fitness** :
-   - les piafs qui n'ont **jamais sauté** sont écartés d'office (fitness −1) ;
+   - les piafs qui n'ont **jamais battu des ailes** sont écartés d'office (fitness −1) ;
    - pour les autres : `pipes passés × 100 000 + nombre de ticks survécus`.
    Traverser un tuyau vaut donc 100 000 fois plus que survivre une seconde de plus — ce qui
    force l'émergence du comportement de navigation plutôt que d'une simple survie passive.
@@ -135,6 +139,6 @@ réseau de neurones, détail de l'algorithme génétique), voir la
 
 ## En résumé
 
-> On ne dit jamais au piaf quand sauter. On lui donne des yeux (9 rayons), un cerveau
+> On ne dit jamais au piaf quand battre des ailes. On lui donne des yeux (11 rayons), un cerveau
 > (4 neurones cachés + 1 neurone de sortie), et une seule règle :
 > **les meilleurs se reproduisent.** Le reste émerge tout seul.

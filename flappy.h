@@ -41,6 +41,8 @@ public:
     QPoint getRight() const;
     QPoint getBotomRight() const;
     QPoint getBotom() const;
+    QPoint getTopLeft() const;
+    QPoint getBotomLeft() const;
     bool toucheUnTuyau(QList<Tuyau *> tuyaux) const;
     QList<QPair<QPoint, QPoint>> getSensors(QList<Tuyau *> tuyaux) const;
 
@@ -66,7 +68,7 @@ private:
     CNeurone *neuroneSortie;
     bool dead;
     int age;
-    int nbSauts;
+    int nbBattements;
 };
 
 #endif // FLAPPY_H

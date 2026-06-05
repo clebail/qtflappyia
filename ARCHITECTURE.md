@@ -30,7 +30,7 @@ MainWindow (QTimer 10 ms)
 Hiérarchie des classes liées au piaf :
 
 ```
-Flappy      physique (position, angle, saut) + cerveau (neurones) + scoring
+Flappy      physique (position, angle, battement d'ailes) + cerveau (neurones) + scoring
 CGenetic    population de Flappy, tri, sélection, croisement
 CNeurone    un neurone : poids (CCapteur[]) + seuil + eval()
 CCapteur    conteneur d'un poids (double)
@@ -63,7 +63,7 @@ Le piaf est dans l'un de trois états mutuellement exclusifs :
 | Chute | `onDown == true` | `y += INC_DOWN` par tick, angle → `ANGLE_DOWN_MAX` |
 | Flottement | ni l'un ni l'autre | oscillation lente (`INC` pixels, alternance) |
 
-### Transition saut
+### Transition battement d'ailes
 
 `up()` est le seul déclencheur de montée :
 
@@ -73,7 +73,7 @@ void Flappy::up() {
     nbCycleUp = 0;
     onUp = true;
     onDown = false;
-    nbSauts++;
+    nbBattements++;
 }
 ```
 
@@ -124,15 +124,35 @@ coïncide visuellement avec le contact entre le sprite et le tuyau.
 
 ## 4. Perception : les capteurs (`Flappy::raycast`)
 
-Tous les rayons partent du point `getRight()` (centre du bord droit du piaf, tenant compte
-de l'angle courant). `getSensors()` génère `FLAPPY_NB_INPUTS = 9` rayons :
+`getSensors()` génère `FLAPPY_NB_INPUTS = FLAPPY_NB_FRONT + FLAPPY_NB_REAR = 9 + 2 = 11`
+rayons, en deux groupes.
+
+**Rayons avant** (`FLAPPY_NB_FRONT = 9`) — partent du côté droit du piaf (`getTopRight()` /
+`getRight()` / `getBotomRight()` selon l'angle du rayon), répartis de −90° à +90° :
 
 ```cpp
-for (int i = 0; i < FLAPPY_NB_INPUTS; i++) {
-    double angle = -90.0 + i * (180.0 / (FLAPPY_NB_INPUTS - 1));  // -90° à +90° par 22,5°
+for (int i = 0; i < FLAPPY_NB_FRONT; i++) {
+    double angle = -90.0 + i * (180.0 / (FLAPPY_NB_FRONT - 1));  // -90° à +90° par 22,5°
+    QPoint origin = (angle < 0) ? topRight : (angle > 0) ? botRight : right;
     result.append({ origin, raycast(origin, angle, tuyaux) });
 }
 ```
+
+**Rayons arrière** (`FLAPPY_NB_REAR = 2`) — deux rayons strictement verticaux partant de la
+queue : l'un du coin arrière-haut (`getTopLeft()`) vers le haut (−90°), l'autre du coin
+arrière-bas (`getBotomLeft()`) vers le bas (+90°) :
+
+```cpp
+QPoint topLeft = getTopLeft();
+QPoint botLeft = getBotomLeft();
+result.append({ topLeft, raycast(topLeft, -90.0, tuyaux) });
+result.append({ botLeft, raycast(botLeft,  90.0, tuyaux) });
+```
+
+Ils donnent au piaf la distance à un obstacle situé juste au-dessus ou au-dessous de son
+arrière-train, ce qui évite qu'il se cogne la queue contre un tuyau qu'il vient de dépasser
+de justesse. Les coins arrière sont calculés comme `getTopRight()` / `getBotomRight()`, mais
+avec un décalage de `π` (`PI`) sur l'angle pour viser le côté gauche du sprite.
 
 `raycast(start, angleDeg, tuyaux)` avance en virgule flottante dans la direction donnée et
 renvoie le premier point d'intersection rencontré, dans cet ordre de priorité :
@@ -176,13 +196,13 @@ Les poids sont initialisés dans [−25, +25[ (`CCapteur::init`).
 ### 5.2 Architecture du réseau (`Flappy`)
 
 ```
-9 entrées  →  4 neurones cachés  →  1 neurone de sortie  →  sauter ?
+11 entrées  →  4 neurones cachés  →  1 neurone de sortie  →  battre des ailes ?
 ```
 
-Chaque neurone caché : `CNeurone(FLAPPY_NB_INPUTS + 1)` = **10 gènes** (biais + 9 entrées).
+Chaque neurone caché : `CNeurone(FLAPPY_NB_INPUTS + 1)` = **12 gènes** (biais + 11 entrées).
 Neurone de sortie : `CNeurone(FLAPPY_NB_HIDDEN + 1)` = **5 gènes** (biais + 4 sorties cachées).
 
-Total par piaf : **4 × 10 + 5 = 45 poids**.
+Total par piaf : **4 × 12 + 5 = 53 poids**.
 
 Propagation avant dans `Flappy::think()` :
 
@@ -225,7 +245,7 @@ pour tout piaf :
 ### 6.1 Fitness (`Flappy::getFitness`)
 
 ```cpp
-if (nbSauts == 0) return -1;          // n'a jamais sauté → écarté
+if (nbBattements == 0) return -1;          // n'a jamais battu des ailes → écarté
 return score * 100000 + age;
 ```
 
@@ -234,7 +254,7 @@ return score * 100000 + age;
 - `age` = nombre de ticks survécus.
 
 La pondération 100 000 garantit que franchir un tuyau vaut toujours plus que survivre
-indéfiniment sans en passer aucun. Les piafs avec `nbSauts == 0` (fitness −1) tombent en
+indéfiniment sans en passer aucun. Les piafs avec `nbBattements == 0` (fitness −1) tombent en
 bas du tri et ne sont jamais tirés comme parents.
 
 ### 6.2 Croisement (`Flappy::from`)
@@ -286,12 +306,14 @@ Tous les principaux leviers se trouvent dans `common.h` et `flappy.h` :
 |---|---|---|
 | `TAILLE_POPULATION` | 100 | nombre de piafs par génération |
 | `TAUX_MUTATION` | 25 | probabilité (%) de mutation par neurone |
-| `FLAPPY_NB_INPUTS` | 9 | nombre de capteurs (rayons) |
+| `FLAPPY_NB_FRONT` | 9 | rayons avant (−90° à +90°) |
+| `FLAPPY_NB_REAR` | 2 | rayons arrière verticaux (queue) |
+| `FLAPPY_NB_INPUTS` | 11 | total des capteurs = `FRONT + REAR` |
 | `FLAPPY_NB_HIDDEN` | 4 | nombre de neurones cachés |
 | `PENTE_NEURONE` | 0.01 | pente de la sigmoïde |
 | `TUYAU_GAP` | 120 px | ouverture entre les deux tuyaux |
 | `INC_UP` | 1 px/tick | vitesse de montée |
-| `MAX_CYCLE_UP` | 40 ticks | durée d'un saut |
+| `MAX_CYCLE_UP` | 40 ticks | durée d'un battement d'ailes |
 | `INC_DOWN` | 2 px/tick | vitesse de chute |
 | `FLAPPY_WIDTH/HEIGHT` | 35×25 px | dimensions du sprite |
 
@@ -302,8 +324,8 @@ Tous les principaux leviers se trouvent dans `common.h` et `flappy.h` :
 Quelques bons points d'entrée pour la lecture :
 
 1. `MainWindow::onTimer` — la boucle de jeu de haut niveau.
-2. `Flappy::think` — propagation avant + décision de saut.
-3. `Flappy::getSensors` / `Flappy::raycast` — construction des 9 entrées.
+2. `Flappy::think` — propagation avant + décision de battre des ailes.
+3. `Flappy::getSensors` / `Flappy::raycast` — construction des 11 entrées (9 avant + 2 arrière).
 4. `Flappy::next` — la physique du vol tick par tick.
 5. `CGenetic::nextGeneration` — sélection, croisement, reset de la population.
 6. `Flappy::from` + `CNeurone::from` / `mute` — la mécanique génétique.

@@ -17,7 +17,7 @@ Flappy::Flappy(int x, int y, int ySol) {
     this->score = 0;
     this->dead = false;
     this->age = 0;
-    this->nbSauts = 0;
+    this->nbBattements = 0;
     for (int i = 0; i < FLAPPY_NB_HIDDEN; i++) {
         neuronesCaches[i] = new CNeurone(FLAPPY_NB_INPUTS + 1);
     }
@@ -111,7 +111,7 @@ void Flappy::up() {
     nbCycleUp = 0;
     onUp = true;
     onDown = false;
-    nbSauts++;
+    nbBattements++;
 }
 
 void Flappy::setYSol(int ySol) {
@@ -176,6 +176,26 @@ QPoint Flappy::getBotom() const {
     return result;
 }
 
+QPoint Flappy::getTopLeft() const {
+    QPoint result;
+    float topAngle = angle * PI / 180 + PI + common->getFlappyBaseAngle();
+
+    result.setX(x + FLAPPY_WIDTH2 + cos(topAngle) * common->getFlappyHypo());
+    result.setY(y + FLAPPY_HEIGHT2 + sin(topAngle) * common->getFlappyHypo());
+
+    return result;
+}
+
+QPoint Flappy::getBotomLeft() const {
+    QPoint result;
+    float bottomAngle = angle * PI / 180 + PI - common->getFlappyBaseAngle();
+
+    result.setX(x + FLAPPY_WIDTH2 + cos(bottomAngle) * common->getFlappyHypo());
+    result.setY(y + FLAPPY_HEIGHT2 + sin(bottomAngle) * common->getFlappyHypo());
+
+    return result;
+}
+
 void Flappy::think(QList<Tuyau *> tuyaux) {
     if (dead) return;
 
@@ -233,7 +253,7 @@ void Flappy::reset(int x, int y, int ySol) {
     this->score = 0;
     this->dead = false;
     this->age = 0;
-    this->nbSauts = 0;
+    this->nbBattements = 0;
 }
 
 bool Flappy::isDead() const {
@@ -245,7 +265,7 @@ void Flappy::markDead() {
 }
 
 int Flappy::getFitness() const {
-    if (nbSauts == 0) return -1;
+    if (nbBattements == 0) return -1;
     return score * 100000 + age;
 }
 
@@ -339,16 +359,25 @@ QList<QPair<QPoint, QPoint>> Flappy::getSensors(QList<Tuyau *> tuyaux) const {
     QPoint right    = getRight();
     QPoint botRight = getBotomRight();
 
-    // 9 rayons de -90° à +90° répartis équitablement (pas de 22.5°)
+    // FLAPPY_NB_FRONT rayons de -90° à +90° répartis équitablement (pas de 22.5°)
     // Les rayons vers le haut partent du coin supérieur droit,
     // vers le bas du coin inférieur droit, à l'horizontale du centre droit.
     // Ainsi le piaf « connaît » ses propres bords et ne sous-estime pas les collisions.
-    for (int i = 0; i < FLAPPY_NB_INPUTS; i++) {
-        double angle = -90.0 + i * (180.0 / (FLAPPY_NB_INPUTS - 1));
+    for (int i = 0; i < FLAPPY_NB_FRONT; i++) {
+        double angle = -90.0 + i * (180.0 / (FLAPPY_NB_FRONT - 1));
         QPoint origin = (angle < 0) ? topRight : (angle > 0) ? botRight : right;
         QPoint endpoint = raycast(origin, angle, tuyaux);
         result.append(QPair<QPoint, QPoint>(origin, endpoint));
     }
+
+    // FLAPPY_NB_REAR rayons verticaux à l'arrière : depuis le coin arrière-haut
+    // vers le haut (-90°) et le coin arrière-bas vers le bas (+90°). Ils détectent
+    // les obstacles juste au-dessus et au-dessous de la queue, pour que le piaf ne
+    // se cogne plus l'arrière contre un tuyau qu'il vient de dépasser de justesse.
+    QPoint topLeft = getTopLeft();
+    QPoint botLeft = getBotomLeft();
+    result.append(QPair<QPoint, QPoint>(topLeft, raycast(topLeft, -90.0, tuyaux)));
+    result.append(QPair<QPoint, QPoint>(botLeft, raycast(botLeft, 90.0, tuyaux)));
 
     return result;
 }
