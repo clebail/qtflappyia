@@ -10,6 +10,9 @@ public:
     virtual ~CNeuroneRelu(void);
 
     virtual double eval(void);
+    double getZ(void) const;
+protected:
+    double z;
 };
 
 #endif // CNEURONERELU_H

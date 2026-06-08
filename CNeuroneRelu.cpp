@@ -13,5 +13,10 @@ double CNeuroneRelu::eval(void) {
         sigma += inputs[i - 1] * genes[i].getValue();
     }
 
+    z = sigma;
     return sigma > 0 ? sigma : 0.0;
+}
+
+double CNeuroneRelu::getZ(void) const {
+    return z;
 }

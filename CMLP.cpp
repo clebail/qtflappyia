@@ -40,6 +40,44 @@ int CMLP::act(void) const {
 void CMLP::backward(int action, double cible, double eta) {
     double gradInputs[FLAPPY_NB_HIDDEN];
     double delta = sortie[action] - cible;
+    double erreurCaches[FLAPPY_NB_HIDDEN];
 
     neuronesSortie[action]->backward(delta, eta, gradInputs);
+
+    for (int i = 0; i < FLAPPY_NB_HIDDEN; i++) {
+        erreurCaches[i] = gradInputs[i] * (neuronesCaches[i]->getZ() > 0 ? 1.0 : 0.0);
+        neuronesCaches[i]->backward(erreurCaches[i], eta);
+    }
+}
+
+double CMLP::getQ(int i) const {
+    if(i >= 0 && i < NB_OUT) {
+        return sortie[i];
+    }
+
+    return 0;
+}
+
+double CMLP::getSortieCache(int i) const {
+    if(i >= 0 && i < FLAPPY_NB_HIDDEN) {
+        return sortieCaches[i];
+    }
+
+    return 0;
+}
+
+CNeuroneRelu * CMLP::getNeuroneCache(int i) const {
+    if(i >= 0 && i < FLAPPY_NB_HIDDEN) {
+        return neuronesCaches[i];
+    }
+
+    return nullptr;
+}
+
+CNeuroneLineaire * CMLP::getNeuroneSortie(int i) const {
+    if(i >= 0 && i < NB_OUT) {
+        return neuronesSortie[i];
+    }
+
+    return nullptr;
 }

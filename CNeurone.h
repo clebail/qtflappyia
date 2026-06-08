@@ -13,7 +13,9 @@ public:
     int getNbGene(void);
 
     void initGenes(void);
-    void backward(double delta, double eta, double *gradInputs);
+    void backward(double delta, double eta, double *gradInputs = nullptr);
+    double getGene(int idxGene) const;
+    void setGene(int idxGene, double value);
 protected:
     int nbGene;
     CCapteur *genes;

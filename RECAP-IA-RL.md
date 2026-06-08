@@ -235,23 +235,36 @@ interdire de revenir en arrière). `loss='cosine_proximity'` aussi inadapté.
 
 ## 7. Où on en est & prochaines étapes
 
-**Phase actuelle : THÉORIE (avant de coder).** Acquis : brique 1 (gradient mono-neurone) +
-brique 2 (MDP / valeur / Bellman / value iteration) + l'assemblage DeepCubeA.
+**Phase actuelle : Phase A terminée, Phase B à démarrer.**
 
-**Reste à reprendre, au choix :**
-1. **Backprop multi-couches** (le "back" : propager l'erreur à travers la couche cachée de
-   Flappy) — la chaîne de dérivées appliquée aux neurones cachés.
-2. **Value iteration à la main** sur un mini-graphe (4-5 états) pour voir `J` converger.
-3. **A\*** en détail : comment `J_θ` devient une séquence de coups concrète (dernier maillon
-   avant le code).
-4. Éventuel **prototype RL de Flappy** (Q-learning) ici dans `qtflappyia`, pour comparer
-   concrètement avec le GA existant.
+### Ce qui est codé (branche `resolve-gradient`)
 
-> Notes Claude Code : le `cd` ne persiste pas entre commandes (le dossier de travail est
-> épinglé au lancement) — sans importance, on travaille par chemins absolus. La mémoire
-> persistante était classée sous le projet `clbrub`
-> (`~/.claude/projects/-home-corentin-dev-clbrub/memory/`) ; **ce fichier-ci est la version
-> portable**, à utiliser pour reprendre depuis un autre dossier/PC.
+**Refactoring de la hiérarchie de neurones :**
+```
+CNeurone (base, eval() pure virtuelle, backward(), getGene/setGene)
+├── CNeuroneSigmoide (eval = sigmoïde avec PENTE_NEURONE)
+│   └── CNeuroneGA    (+ seuil, from, mute, copyFrom — tout le GA)
+├── CNeuroneRelu      (eval = max(0,z), cache z pré-activation pour backprop)
+└── CNeuroneLineaire  (eval = z, sortie non bornée pour régression)
+```
+`CCapteur` enrichi de `setValue()`. Le GA existant est **intact**.
+
+**`CMLP` — le réseau gradient :**
+- Architecture : 11 entrées → 4 `CNeuroneRelu` cachés → 2 `CNeuroneLineaire` sorties
+- `forward(inputs[])` : calcule et cache `sortieCaches[]` et `sortie[]`
+- `act()` : argmax sur `sortie[]` → action 0 (rien) ou 1 (battre)
+- `backward(action, cible, eta)` : backprop complète 2 couches
+  - couche sortie : `erreur = sortie[action] - cible`, mise à jour poids
+  - couche cachée : `erreur_cachée[i] = gradInputs[i] * (z[i] > 0 ? 1 : 0)`, mise à jour poids
+- Accesseurs : `getQ(i)`, `getSortieCache(i)`, `getNeuroneSortie(i)`, `getNeuroneCache(i)`
+
+**Gradient-check :** `checkGradient()` dans `main.cpp` — diff analytique/numérique = 2×10⁻⁸ ✓
+
+**À faire avant de reprendre (dette technique) :**
+- Tester quelques poids supplémentaires dans `checkGradient` (un poids non-biais de la sortie,
+  un biais caché, un poids caché) et en faire un vrai test unitaire Qt.
+
+**Prochaine étape : Phase B — étape 4 (état & récompense).**
 
 ---
 
@@ -293,15 +306,13 @@ est de *comprendre exactement* ce qu'on fait) ; il guide, relit, propose des tes
 
 ### Curriculum (chaque point = une étape socratique)
 
-**Phase A — Brique 1 concrète : backprop multi-couches**
-1. **Forward de l'MLP, reformulé.** Repartir de `CNeurone::eval`. Choisir la représentation
-   des poids (tableaux/matrices). ReLU caché + sortie linéaire, et *pourquoi*.
-   → coder `forward()` qui met en cache `z` et les activations.
-2. **Backprop de la couche de sortie.** Dériver `δ_sortie = ∂L/∂z` pour MSE + sortie linéaire.
-   → coder le gradient sortie + mise à jour des poids.
-3. **Backprop vers la couche cachée (le « back »).** Propager
-   `δ_caché = (Wᵀ·δ_sortie) ⊙ relu'(z)`. → coder. **Checkpoint : gradient-check numérique**
-   (différences finies) pour *prouver* que la backprop est correcte. ← clôt l'« À FAIRE ».
+**Phase A — Brique 1 concrète : backprop multi-couches** ✅ TERMINÉE
+1. **Forward de l'MLP, reformulé.** ✅ `CMLP::forward()` — ReLU caché, linéaire sortie,
+   cache `sortieCaches[]` et `sortie[]`.
+2. **Backprop de la couche de sortie.** ✅ `erreur = sortie[action] - cible` ;
+   `CNeurone::backward()` met à jour biais + poids et retourne `gradInputs[]`.
+3. **Backprop vers la couche cachée.** ✅ `erreur_cachée[i] = gradInputs[i] * relu'(z[i])` ;
+   gradient-check : diff = 2×10⁻⁸. ← brique 1 close.
 
 **Phase B — Brique 2 concrète : Q-learning sur Flappy**
 4. **État & récompense.** État markovien (+ vitesse), actions {rien, battre}, shaping de
@@ -327,4 +338,4 @@ est de *comprendre exactement* ce qu'on fait) ; il guide, relit, propose des tes
 - **Phase B** : compiler (`qmake` + `make`), lancer, observer le score RL grimper au fil des
   épisodes et le comparer au GA ; toggle pour basculer à chaud.
 
-> **REPRISE : on démarre à l'étape 1 (forward de l'MLP).** Claude explique, Corentin code.
+> **REPRISE : Phase B, étape 4 — état & récompense.** Claude explique, Corentin code.
