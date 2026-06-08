@@ -9,7 +9,7 @@ public:
     virtual ~CNeurone(void);
 
     void setInputs(double *inputs);
-    virtual double eval(double a) = 0;
+    virtual double eval(void) = 0;
     int getNbGene(void);
 
     void initGenes(void);

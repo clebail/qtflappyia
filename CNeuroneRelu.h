@@ -9,7 +9,7 @@ public:
     CNeuroneRelu(int nbGene);
     virtual ~CNeuroneRelu(void);
 
-    virtual double eval(double);
+    virtual double eval(void);
 };
 
 #endif // CNEURONERELU_H

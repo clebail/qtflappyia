@@ -212,12 +212,12 @@ void Flappy::think(QList<Tuyau *> tuyaux) {
     double hiddenOut[FLAPPY_NB_HIDDEN];
     for (int i = 0; i < FLAPPY_NB_HIDDEN; i++) {
         neuronesCaches[i]->setInputs(inputs);
-        hiddenOut[i] = neuronesCaches[i]->eval(PENTE_NEURONE);
+        hiddenOut[i] = neuronesCaches[i]->eval();
     }
 
     // Neurone de sortie
     neuroneSortie->setInputs(hiddenOut);
-    if (neuroneSortie->eval(PENTE_NEURONE) >= neuroneSortie->getSeuil() && !onUp) {
+    if (neuroneSortie->eval() >= neuroneSortie->getSeuil() && !onUp) {
         up();
     }
 

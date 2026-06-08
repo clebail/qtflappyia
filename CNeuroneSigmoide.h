@@ -9,7 +9,7 @@ public:
     CNeuroneSigmoide(int nbGene);
     virtual ~CNeuroneSigmoide(void);
 
-    virtual double eval(double a);
+    virtual double eval(void);
 };
 
 #endif // CNEURONESIGMOIDE_H
