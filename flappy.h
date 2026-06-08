@@ -5,7 +5,7 @@
 #include <QTimer>
 #include "common.h"
 #include "tuyau.h"
-#include "CNeurone.h"
+#include "CNeuroneGA.h"
 
 #define MAX_INC         5
 #define MAX_CYCLE_UP    40
@@ -64,8 +64,8 @@ private:
     Common *common;
     int angle;
     int score;
-    CNeurone *neuronesCaches[FLAPPY_NB_HIDDEN];
-    CNeurone *neuroneSortie;
+    CNeuroneGA *neuronesCaches[FLAPPY_NB_HIDDEN];
+    CNeuroneGA *neuroneSortie;
     bool dead;
     int age;
     int nbBattements;

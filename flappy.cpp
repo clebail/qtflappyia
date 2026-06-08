@@ -19,9 +19,9 @@ Flappy::Flappy(int x, int y, int ySol) {
     this->age = 0;
     this->nbBattements = 0;
     for (int i = 0; i < FLAPPY_NB_HIDDEN; i++) {
-        neuronesCaches[i] = new CNeurone(FLAPPY_NB_INPUTS + 1);
+        neuronesCaches[i] = new CNeuroneGA(FLAPPY_NB_INPUTS + 1);
     }
-    neuroneSortie = new CNeurone(FLAPPY_NB_HIDDEN + 1);
+    neuroneSortie = new CNeuroneGA(FLAPPY_NB_HIDDEN + 1);
 }
 
 Flappy::Flappy(const Flappy& other) : Flappy(other.x, other.y, other.ySol) {

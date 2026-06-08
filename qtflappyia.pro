@@ -15,6 +15,9 @@ SOURCES += \
     CCapteur.cpp \
     CGenetic.cpp \
     CNeurone.cpp \
+    CNeuroneGA.cpp \
+    CNeuroneRelu.cpp \
+    CNeuroneSigmoide.cpp \
     common.cpp \
     flappy.cpp \
     main.cpp \
@@ -26,6 +29,9 @@ HEADERS += \
     CCapteur.h \
     CGenetic.h \
     CNeurone.h \
+    CNeuroneGA.h \
+    CNeuroneRelu.h \
+    CNeuroneSigmoide.h \
     common.h \
     flappy.h \
     mainwindow.h \

@@ -1,0 +1,17 @@
+#include "CNeuroneRelu.h"
+
+CNeuroneRelu::CNeuroneRelu(int nbGene) : CNeurone(nbGene) {
+
+}
+
+CNeuroneRelu::~CNeuroneRelu(void) {
+}
+
+double CNeuroneRelu::eval(double) {
+    double sigma = genes[0].getValue();
+    for (int i = 1; i < nbGene; i++) {
+        sigma += inputs[i - 1] * genes[i].getValue();
+    }
+
+    return sigma > 0 ? sigma : 0.0;
+}
