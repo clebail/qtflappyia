@@ -14,8 +14,10 @@ win32:RC_ICONS = icon.ico
 SOURCES += \
     CCapteur.cpp \
     CGenetic.cpp \
+    CMLP.cpp \
     CNeurone.cpp \
     CNeuroneGA.cpp \
+    CNeuroneLineaire.cpp \
     CNeuroneRelu.cpp \
     CNeuroneSigmoide.cpp \
     common.cpp \
@@ -28,8 +30,10 @@ SOURCES += \
 HEADERS += \
     CCapteur.h \
     CGenetic.h \
+    CMLP.h \
     CNeurone.h \
     CNeuroneGA.h \
+    CNeuroneLineaire.h \
     CNeuroneRelu.h \
     CNeuroneSigmoide.h \
     common.h \
