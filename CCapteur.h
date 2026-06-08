@@ -6,7 +6,8 @@ public:
     CCapteur(void);
     CCapteur(double value);
     void init(void);
-    double getValue(void);
+    double getValue(void) const;
+    void setValue(double value);
     void from(CCapteur *other);
 private:
     double value;

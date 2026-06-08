@@ -15,6 +15,7 @@ public:
 
     void forward(double *inputs);
     int act(void) const;
+    void backward(int action, double cible, double eta);
 private:
     CNeuroneRelu *neuronesCaches[FLAPPY_NB_HIDDEN];
     CNeuroneLineaire *neuronesSortie[NB_OUT];

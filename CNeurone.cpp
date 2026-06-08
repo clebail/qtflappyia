@@ -27,3 +27,11 @@ void CNeurone::initGenes(void) {
         genes[i].init();
     }
 }
+
+void CNeurone::backward(double delta, double eta, double *gradInputs) {
+    genes[0].setValue(genes[0].getValue() - eta * delta);
+    for (int i = 1; i < nbGene; i++) {
+        gradInputs[i - 1] = delta * genes[i].getValue();
+        genes[i].setValue(genes[i].getValue() - eta * delta * inputs[i - 1]);
+    }
+}

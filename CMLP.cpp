@@ -36,3 +36,10 @@ void CMLP::forward(double *inputs) {
 int CMLP::act(void) const {
     return sortie[0] >= sortie[1] ? 0 : 1;
 }
+
+void CMLP::backward(int action, double cible, double eta) {
+    double gradInputs[FLAPPY_NB_HIDDEN];
+    double delta = sortie[action] - cible;
+
+    neuronesSortie[action]->backward(delta, eta, gradInputs);
+}

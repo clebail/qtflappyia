@@ -13,6 +13,7 @@ public:
     int getNbGene(void);
 
     void initGenes(void);
+    void backward(double delta, double eta, double *gradInputs);
 protected:
     int nbGene;
     CCapteur *genes;
