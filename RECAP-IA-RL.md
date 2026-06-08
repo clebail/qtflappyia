@@ -252,3 +252,79 @@ brique 2 (MDP / valeur / Bellman / value iteration) + l'assemblage DeepCubeA.
 > persistante était classée sous le projet `clbrub`
 > (`~/.claude/projects/-home-corentin-dev-clbrub/memory/`) ; **ce fichier-ci est la version
 > portable**, à utiliser pour reprendre depuis un autre dossier/PC.
+
+---
+
+## 8. DÉCISION : on code le prototype RL de Flappy ici (option 4 du §7)
+
+Branche `resolve-gradient`. On transforme le Flappy entraîné par **GA** (existant : `CNeurone`
++ `CGenetic`, forward sigmoïde, sélection/croisement/mutation) en un Flappy entraîné par
+**descente de gradient + Q-learning (DQN)**, **à côté** du GA, pour comparer concrètement.
+Cela rend tangibles les deux briques : brique 1 (backprop multi-couches, le « back » encore
+À FAIRE) et brique 2 (Q-learning / cible de Bellman).
+
+### Méthode de travail (actée)
+**Socratique, pas à pas.** Pour chaque brique : Claude explique la théorie + la décision →
+**Corentin code** → Claude relit et corrige. On n'avance qu'une fois la brique comprise (et
+testée quand c'est possible). Claude **n'écrit pas** le code à la place de Corentin (le but
+est de *comprendre exactement* ce qu'on fait) ; il guide, relit, propose des tests.
+
+### Rappel de l'existant (pour s'y greffer)
+- Réseau actuel : **11 entrées** (`FLAPPY_NB_INPUTS` = 9 rayons avant + 2 arrière, distances
+  normalisées) → **4 neurones cachés** sigmoïde → **1 neurone de sortie** sigmoïde.
+  Décision dans `Flappy::think()` : `sortie ≥ seuil → up()`.
+- `CNeurone::eval(a)` : `z = genes[0] + Σ inputs[i]·genes[i]` ; `y = e^{az}/(e^{az}+1)`
+  (`a = PENTE_NEURONE = 0.01`). `genes[0]` = biais, `genes[1..]` = poids (objets `CCapteur`).
+- Entraînement GA dans `CGenetic` : tri par `getFitness()` (= `score*100000 + age`),
+  croisement `Flappy::from()`, mutation aléatoire `CNeurone::mute()`. Boucle de sim dans
+  `MainWindow::onTimer()` : `think → next → collision → markDead`, et `nextGeneration()`
+  quand tout le monde est mort.
+
+### Décisions de conception (fixées)
+- On **garde `CNeurone`/`CGenetic` intacts** (le GA reste pour comparer).
+- **Nouvelle classe MLP dédiée** (réutilisable ensuite pour le value-net du Rubik) : forward
+  avec **mise en cache** des activations + backward (backprop + mise à jour SGD).
+- **Activations : ReLU caché, sortie linéaire.** Pourquoi : Q est un réel **non borné**
+  (régression / MSE) → la sigmoïde saturerait. Cohérent avec le MLP-régression de DeepCubeA.
+- **État markovien** : ajouter la **vitesse verticale** à l'état (le §3 notait que les rayons
+  seuls ne le sont pas). Représentation compacte vs 11 rayons → à trancher en brique 4.
+- **2 sorties = Q(s, rien) et Q(s, battre)** ; décider = **argmax**.
+- **Stabilité DQN** : **replay buffer** + **réseau-cible** copié périodiquement.
+
+### Curriculum (chaque point = une étape socratique)
+
+**Phase A — Brique 1 concrète : backprop multi-couches**
+1. **Forward de l'MLP, reformulé.** Repartir de `CNeurone::eval`. Choisir la représentation
+   des poids (tableaux/matrices). ReLU caché + sortie linéaire, et *pourquoi*.
+   → coder `forward()` qui met en cache `z` et les activations.
+2. **Backprop de la couche de sortie.** Dériver `δ_sortie = ∂L/∂z` pour MSE + sortie linéaire.
+   → coder le gradient sortie + mise à jour des poids.
+3. **Backprop vers la couche cachée (le « back »).** Propager
+   `δ_caché = (Wᵀ·δ_sortie) ⊙ relu'(z)`. → coder. **Checkpoint : gradient-check numérique**
+   (différences finies) pour *prouver* que la backprop est correcte. ← clôt l'« À FAIRE ».
+
+**Phase B — Brique 2 concrète : Q-learning sur Flappy**
+4. **État & récompense.** État markovien (+ vitesse), actions {rien, battre}, shaping de
+   récompense, γ. Trancher : état compact (dx, dy au trou, vitesse, y) vs 11 rayons.
+5. **Q-valeurs & cible de Bellman.** Sortie = 2 Q-valeurs ; cible `y = r + γ·max Q(s',a')`
+   (ou `y = r` si mort). → câbler `act()` ε-greedy + le calcul de la cible.
+6. **Le pas d'apprentissage.** Perte `½(Q(s,a) − y)²`, backprop sur la **seule action jouée**.
+   → coder `learn()` en réutilisant le backward de l'MLP.
+7. **Stabilité.** Replay buffer (ring) + réseau-cible copié périodiquement, et *pourquoi*
+   (décorrélation i.i.d. ; cible non mouvante). → ajouter le buffer + la copie.
+8. **Intégration & UI.** Piloter un piaf épisode par épisode dans `MainWindow::onTimer`,
+   bascule GA ↔ RL, afficher ε / épisode / score. → regarder apprendre.
+
+### Fichiers à toucher (au fil des étapes)
+- Nouveaux : `CMlp.h/.cpp` (phase A), `CDqn*.h/.cpp` (phase B) — noms à fixer ensemble.
+- `common.h` : constantes (η, γ, ε, tailles de couches, taille du buffer).
+- `flappy.{h,cpp}` : exposer l'état markovien + un mode piloté par le DQN.
+- `mainwindow.{cpp}` + `mainwindow.ui` : bascule GA/RL + labels (étape 8).
+- `qtflappyia.pro` : ajouter les nouveaux fichiers aux SOURCES/HEADERS.
+
+### Vérification
+- **Étape 3** : gradient-check numérique (|grad analytique − grad par différences finies| petit).
+- **Phase B** : compiler (`qmake` + `make`), lancer, observer le score RL grimper au fil des
+  épisodes et le comparer au GA ; toggle pour basculer à chaud.
+
+> **REPRISE : on démarre à l'étape 1 (forward de l'MLP).** Claude explique, Corentin code.
