@@ -14,7 +14,7 @@
 #define TAUX_MUTATION       25
 #define FLAPPY_NB_FRONT     9
 #define FLAPPY_NB_REAR      2
-#define FLAPPY_NB_INPUTS    (FLAPPY_NB_FRONT + FLAPPY_NB_REAR)
+#define FLAPPY_NB_INPUTS    (FLAPPY_NB_FRONT + FLAPPY_NB_REAR + 1)
 #define FLAPPY_NB_HIDDEN    4
 #define SCENE_WIDTH         563
 #define SCENE_HEIGHT        510
