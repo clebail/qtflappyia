@@ -14,19 +14,19 @@ SceneWidget::SceneWidget(QWidget *parent) : QWidget(parent) {
     showSensors = false;
 }
 
-void SceneWidget::setFlappys(const QList<Flappy *>& flappys) {
-    this->flappys = flappys;
+void SceneWidget::setCFlappys(const QList<CFlappyGA *>& cflappys) {
+    this->cflappys = cflappys;
 }
 
 void SceneWidget::setTuyaux(const QList<Tuyau *>& tuyaux) {
     this->tuyaux = tuyaux;
 }
 
-int SceneWidget::getYSol() const {
+int SceneWidget::getYSol(void) const {
     return ySol;
 }
 
-int SceneWidget::getXSol() const {
+int SceneWidget::getXSol(void) const {
     return xSol;
 }
 
@@ -38,7 +38,7 @@ void SceneWidget::setShowSensors(bool show) {
     showSensors = show;
 }
 
-SceneWidget::~SceneWidget() {
+SceneWidget::~SceneWidget(void) {
 }
 
 void SceneWidget::paintEvent(QPaintEvent *) {
@@ -56,8 +56,8 @@ void SceneWidget::paintEvent(QPaintEvent *) {
     int ox = FLAPPY_WIDTH / 2;
     int oy = FLAPPY_HEIGHT / 2;
 
-    for(int i=0;i<flappys.size();i++) {
-        Flappy *f = flappys[i];
+    for(int i=0;i<cflappys.size();i++) {
+        CFlappyGA *f = cflappys[i];
         if (f->isDead()) continue;
 
         QImage img = f->getImage();

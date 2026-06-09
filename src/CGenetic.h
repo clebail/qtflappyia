@@ -2,25 +2,25 @@
 #define CGENETIC_H
 
 #include <QList>
-#include "flappy.h"
+#include "CFlappyGA.h"
 
 class CGenetic {
 public:
     CGenetic(int popSize, int startX, int startY, int ySol);
-    ~CGenetic();
+    ~CGenetic(void);
 
-    QList<Flappy *>& getPopulation();
+    QList<CFlappyGA *>& getPopulation(void);
     void nextGeneration(int startX, int startY, int ySol);
-    int getGeneration() const;
-    int getAllTimeBestScore() const;
+    int getGeneration(void) const;
+    int getAllTimeBestScore(void) const;
 
 private:
     int popSize;
     int generation;
     int allTimeBestScore;
-    QList<Flappy *> population;
+    QList<CFlappyGA *> population;
 
-    void triPopulation();
+    void triPopulation(void);
 };
 
 #endif // CGENETIC_H

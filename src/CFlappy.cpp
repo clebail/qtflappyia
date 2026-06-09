@@ -1,15 +1,16 @@
 #include <math.h>
-#include "flappy.h"
+#include "CFlappy.h"
 
-Flappy::Flappy(int x, int y, int ySol) {
+CFlappy::CFlappy(int x, int y, int ySol, Common::ESpriteType spriteType) {
     common = Common::getInstance();
 
     this->x = x;
     this->y = y;
     this->ySol = ySol;
+    this->spriteType = spriteType;
     this->inc = INC * (rand() % 2 == 1 ? 1 : -1);
     this->nbInc = rand() % MAX_INC;
-    this->idx = rand() % common->getNbSpriteImage(Common::estFlappy);
+    this->idx = rand() % common->getNbSpriteImage(spriteType);
     this->angle = 0;
     this->onUp = this->onDown = false;
     this->idNext = 0;
@@ -18,56 +19,16 @@ Flappy::Flappy(int x, int y, int ySol) {
     this->dead = false;
     this->age = 0;
     this->nbBattements = 0;
-    for (int i = 0; i < FLAPPY_NB_HIDDEN; i++) {
-        neuronesCaches[i] = new CNeuroneGA(FLAPPY_NB_INPUTS + 1);
-    }
-    neuroneSortie = new CNeuroneGA(FLAPPY_NB_HIDDEN + 1);
 }
 
-Flappy::Flappy(const Flappy& other) : Flappy(other.x, other.y, other.ySol) {
-    this->inc = other.inc;
-    this->nbInc = other.nbInc;
-    this->idx = other.idx;
-    this->angle = other.angle;
-    this->onUp = other.onUp;
-    this->onDown = other.onDown;
-    this->idNext = other.idNext;
-    this->score = other.score;
-    this->dead = other.dead;
-    this->age = other.age;
-    for (int i = 0; i < FLAPPY_NB_HIDDEN; i++) {
-        neuronesCaches[i]->copyFrom(*other.neuronesCaches[i]);
-    }
-    neuroneSortie->copyFrom(*other.neuroneSortie);
+CFlappy::~CFlappy(void) {
 }
 
-Flappy::~Flappy() {
-    for (int i = 0; i < FLAPPY_NB_HIDDEN; i++) {
-        delete neuronesCaches[i];
-    }
-    delete neuroneSortie;
-}
-
-Flappy& Flappy::operator=(const Flappy& other) {
-    this->idx = other.idx;
-    this->y = other.y;
-    this->inc = other.inc;
-    this->nbInc = other.nbInc;
-
-    return *this;
-}
-
-QImage Flappy::getImage() const {
-    QImage result = common->getSpriteImage(Common::estFlappy, idx);
-
-    return result;
-}
-
-bool Flappy::next() {
+bool CFlappy::next(void) {
     idNext = (idNext + 1) % 10;
 
     if(idNext == 1 && !onDown) {
-        idx = (idx + 1) % common->getNbSpriteImage(Common::estFlappy);
+        idx = (idx + 1) % common->getNbSpriteImage(spriteType);
         y += inc;
 
         if(nbInc++ == MAX_INC) {
@@ -94,19 +55,19 @@ bool Flappy::next() {
     return y >= 0 && y < ySol - FLAPPY_WIDTH + 2 * INC_DOWN;
 }
 
-int Flappy::getX() const {
+int CFlappy::getX(void) const {
     return x;
 }
 
-int Flappy::getY() const {
+int CFlappy::getY(void) const {
     return y;
 }
 
-int Flappy::getAngle() const {
+int CFlappy::getAngle(void) const {
     return angle;
 }
 
-void Flappy::up() {
+void CFlappy::up(void) {
     angle = 0;
     nbCycleUp = 0;
     onUp = true;
@@ -114,19 +75,19 @@ void Flappy::up() {
     nbBattements++;
 }
 
-void Flappy::setYSol(int ySol) {
+void CFlappy::setYSol(int ySol) {
     this->ySol = ySol;
 }
 
-int Flappy::getScore() const {
+int CFlappy::getScore(void) const {
     return score;
 }
 
-void Flappy::incScore() {
+void CFlappy::incScore(void) {
     score++;
 }
 
-QPoint Flappy::getTop() const {
+QPoint CFlappy::getTop(void) const {
     QPoint result;
     float topAngle = angle * PI / 180 - 90;
 
@@ -136,7 +97,7 @@ QPoint Flappy::getTop() const {
     return result;
 }
 
-QPoint Flappy::getTopRight() const {
+QPoint CFlappy::getTopRight(void) const {
     QPoint result;
     float topAngle = angle * PI / 180 - common->getFlappyBaseAngle();
 
@@ -146,7 +107,7 @@ QPoint Flappy::getTopRight() const {
     return result;
 }
 
-QPoint Flappy::getRight() const {
+QPoint CFlappy::getRight(void) const {
     QPoint result;
 
     result.setX(x + FLAPPY_WIDTH2 + cos(angle * PI / 180) * FLAPPY_WIDTH2);
@@ -155,7 +116,7 @@ QPoint Flappy::getRight() const {
     return result;
 }
 
-QPoint Flappy::getBotomRight() const {
+QPoint CFlappy::getBotomRight(void) const {
     QPoint result;
     float bottomAngle = angle * PI / 180 + common->getFlappyBaseAngle();
 
@@ -166,7 +127,7 @@ QPoint Flappy::getBotomRight() const {
     return result;
 }
 
-QPoint Flappy::getBotom() const {
+QPoint CFlappy::getBotom(void) const {
     QPoint result;
     float bottomAngle = angle * PI / 180 + 90;
 
@@ -176,7 +137,7 @@ QPoint Flappy::getBotom() const {
     return result;
 }
 
-QPoint Flappy::getTopLeft() const {
+QPoint CFlappy::getTopLeft(void) const {
     QPoint result;
     float topAngle = angle * PI / 180 + PI + common->getFlappyBaseAngle();
 
@@ -186,7 +147,7 @@ QPoint Flappy::getTopLeft() const {
     return result;
 }
 
-QPoint Flappy::getBotomLeft() const {
+QPoint CFlappy::getBotomLeft(void) const {
     QPoint result;
     float bottomAngle = angle * PI / 180 + PI - common->getFlappyBaseAngle();
 
@@ -196,56 +157,13 @@ QPoint Flappy::getBotomLeft() const {
     return result;
 }
 
-void Flappy::think(QList<Tuyau *> tuyaux) {
-    if (dead) return;
-
-    QList<QPair<QPoint, QPoint>> sensors = getSensors(tuyaux);
-    double inputs[FLAPPY_NB_INPUTS];
-    double maxDist = sqrt((double)(SCENE_WIDTH * SCENE_WIDTH + SCENE_HEIGHT * SCENE_HEIGHT));
-    for (int i = 0; i < FLAPPY_NB_INPUTS; i++) {
-        double dx = sensors[i].second.x() - sensors[i].first.x();
-        double dy = sensors[i].second.y() - sensors[i].first.y();
-        inputs[i] = sqrt(dx*dx + dy*dy) / maxDist;
-    }
-
-    // Couche cachée
-    double hiddenOut[FLAPPY_NB_HIDDEN];
-    for (int i = 0; i < FLAPPY_NB_HIDDEN; i++) {
-        neuronesCaches[i]->setInputs(inputs);
-        hiddenOut[i] = neuronesCaches[i]->eval();
-    }
-
-    // Neurone de sortie
-    neuroneSortie->setInputs(hiddenOut);
-    if (neuroneSortie->eval() >= neuroneSortie->getSeuil() && !onUp) {
-        up();
-    }
-
-    age++;
-}
-
-void Flappy::from(Flappy *f1, Flappy *f2) {
-    for (int i = 0; i < FLAPPY_NB_HIDDEN; i++) {
-        int s = rand() % neuronesCaches[i]->getNbGene();
-        neuronesCaches[i]->from(*f1->neuronesCaches[i], *f2->neuronesCaches[i], s);
-        if (rand() % 100 < TAUX_MUTATION) {
-            neuronesCaches[i]->mute(rand() % neuronesCaches[i]->getNbGene());
-        }
-    }
-    int s = rand() % neuroneSortie->getNbGene();
-    neuroneSortie->from(*f1->neuroneSortie, *f2->neuroneSortie, s);
-    if (rand() % 100 < TAUX_MUTATION) {
-        neuroneSortie->mute(rand() % neuroneSortie->getNbGene());
-    }
-}
-
-void Flappy::reset(int x, int y, int ySol) {
+void CFlappy::reset(int x, int y, int ySol) {
     this->x = x;
     this->y = y;
     this->ySol = ySol;
     this->inc = INC * (rand() % 2 == 1 ? 1 : -1);
     this->nbInc = rand() % MAX_INC;
-    this->idx = rand() % common->getNbSpriteImage(Common::estFlappy);
+    this->idx = rand() % common->getNbSpriteImage(spriteType);
     this->angle = 0;
     this->onUp = this->onDown = false;
     this->idNext = 0;
@@ -256,20 +174,15 @@ void Flappy::reset(int x, int y, int ySol) {
     this->nbBattements = 0;
 }
 
-bool Flappy::isDead() const {
+bool CFlappy::isDead(void) const {
     return dead;
 }
 
-void Flappy::markDead() {
+void CFlappy::markDead(void) {
     dead = true;
 }
 
-int Flappy::getFitness() const {
-    if (nbBattements == 0) return -1;
-    return score * 100000 + age;
-}
-
-bool Flappy::toucheUnTuyau(QList<Tuyau *> tuyaux) const {
+bool CFlappy::toucheUnTuyau(QList<Tuyau *> tuyaux) const {
     const int m = 4;
     QRect birdRect(x + m, y + m, FLAPPY_WIDTH - 2*m, FLAPPY_HEIGHT - 2*m);
     for (Tuyau *t : tuyaux) {
@@ -280,7 +193,7 @@ bool Flappy::toucheUnTuyau(QList<Tuyau *> tuyaux) const {
     return false;
 }
 
-QPoint Flappy::raycast(QPoint start, double angleDeg, QList<Tuyau *> tuyaux) const {
+QPoint CFlappy::raycast(QPoint start, double angleDeg, QList<Tuyau *> tuyaux) const {
     double rad = angleDeg * PI / 180.0;
     double dx = cos(rad);
     double dy = sin(rad);
@@ -353,7 +266,7 @@ QPoint Flappy::raycast(QPoint start, double angleDeg, QList<Tuyau *> tuyaux) con
     return QPoint((int)ex, (int)ey);
 }
 
-QList<QPair<QPoint, QPoint>> Flappy::getSensors(QList<Tuyau *> tuyaux) const {
+QList<QPair<QPoint, QPoint>> CFlappy::getSensors(QList<Tuyau *> tuyaux) const {
     QList<QPair<QPoint, QPoint>> result;
     QPoint topRight = getTopRight();
     QPoint right    = getRight();
@@ -378,6 +291,16 @@ QList<QPair<QPoint, QPoint>> Flappy::getSensors(QList<Tuyau *> tuyaux) const {
     QPoint botLeft = getBotomLeft();
     result.append(QPair<QPoint, QPoint>(topLeft, raycast(topLeft, -90.0, tuyaux)));
     result.append(QPair<QPoint, QPoint>(botLeft, raycast(botLeft, 90.0, tuyaux)));
+
+    return result;
+}
+
+double CFlappy::getVitesse(void) const {
+    return onUp ? (double)(MAX_CYCLE_UP - nbCycleUp) / MAX_CYCLE_UP : (onDown ? -1.0 : 0.0);
+}
+
+QImage CFlappy::getImage(void) const {
+    QImage result = common->getSpriteImage(spriteType, idx);
 
     return result;
 }

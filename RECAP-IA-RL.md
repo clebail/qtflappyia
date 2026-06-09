@@ -250,7 +250,7 @@ CNeurone (base, eval() pure virtuelle, backward(), getGene/setGene)
 `CCapteur` enrichi de `setValue()`. Le GA existant est **intact**.
 
 **`CMLP` — le réseau gradient :**
-- Architecture : 11 entrées → 4 `CNeuroneRelu` cachés → 2 `CNeuroneLineaire` sorties
+- Architecture : 12 entrées → 4 `CNeuroneRelu` cachés → 2 `CNeuroneLineaire` sorties
 - `forward(inputs[])` : calcule et cache `sortieCaches[]` et `sortie[]`
 - `act()` : argmax sur `sortie[]` → action 0 (rien) ou 1 (battre)
 - `backward(action, cible, eta)` : backprop complète 2 couches
@@ -282,6 +282,39 @@ Build depuis la racine : `qmake && make` ; lancer le test : `make check` (ou `./
 quelques jeux d'`inputs` (positifs/négatifs) → couvre le 2e neurone de sortie et des ReLU
 éteints (`z<0`).
 
+**Conventions de code appliquées à tout le dépôt :**
+- Toutes les déclarations sans paramètre passées en `(void)` (style C strict).
+- `const` manquants ajoutés : `CNeurone::getNbGene(void) const`,
+  `Common::getSpritesImage(void) const`.
+
+**Capteur de vitesse markovien — `CFlappy::getVitesse(void) const` ✅**
+- `FLAPPY_NB_INPUTS = FLAPPY_NB_FRONT + FLAPPY_NB_REAR + 1 = 12` (slot `+1` existait déjà).
+- Formule : `onUp ? (double)(MAX_CYCLE_UP − nbCycleUp) / MAX_CYCLE_UP : (onDown ? −1.0 : 0.0)`
+  Plage `[−1 ; 1]`. Décroît linéairement pendant la montée (1.0 → ~0), constant à −1.0 en chute.
+- Markovien pour tout ce qui pilote la survie ; micro non-markovianité du balancement neutre
+  sans conséquence pratique.
+- Méthode `public` : le DQN lira l'état de l'extérieur sans passer par `think()`.
+
+**Refactoring hiérarchie `CFlappy` ✅**
+```
+CFlappy   (base abstraite : physique, capteurs, getImage via spriteType)
+├── CFlappyGA  (+ CNeuroneGA, think GA, from, getFitness)
+└── CFlappyRL  (à créer — CMLP + DQN)
+```
+- `CFlappy(int x, int y, int ySol, Common::ESpriteType spriteType)` : le type de sprite
+  est passé au constructeur de base (pas de virtuelle pure dans le constructeur).
+- `CFlappyGA` passe `Common::estFlappy` ; futur `CFlappyRL` passera `Common::estFlappyRL`.
+- `from()` et `getFitness()` dans `CFlappyGA` uniquement.
+- `CNeuroneGA` inclus dans `CFlappyGA.h`, plus dans `CFlappy.h`.
+- Classe renommée `Flappy` → `CFlappy` (fichiers `CFlappy.h/.cpp`, `CFlappyGA.h/.cpp`).
+- `CGenetic` utilise `QList<CFlappyGA*>`.
+
+**Sprite RL vert ✅**
+- `Common::ESpriteType` : ajout de `estFlappyRL`.
+- Frames vertes générées par décalage de teinte HSV +120° sur les frames originales,
+  insérées dans `flappy.png` à `y = 150` (juste sous les frames rouges à `y = 121`).
+- Enregistrées dans `Common::Common()` : `flappyRL.rects` aux positions `(688/729/771, 150)`.
+
 **Prochaine étape : Phase B — étape 4 (état & récompense).**
 
 ---
@@ -301,13 +334,13 @@ testée quand c'est possible). Claude **n'écrit pas** le code à la place de Co
 est de *comprendre exactement* ce qu'on fait) ; il guide, relit, propose des tests.
 
 ### Rappel de l'existant (pour s'y greffer)
-- Réseau actuel : **11 entrées** (`FLAPPY_NB_INPUTS` = 9 rayons avant + 2 arrière, distances
-  normalisées) → **4 neurones cachés** sigmoïde → **1 neurone de sortie** sigmoïde.
-  Décision dans `Flappy::think()` : `sortie ≥ seuil → up()`.
+- Réseau GA actuel : **12 entrées** (`FLAPPY_NB_INPUTS` = 9 rayons avant + 2 arrière +
+  1 vitesse normalisée) → **4 neurones cachés** sigmoïde → **1 neurone de sortie** sigmoïde.
+  Décision dans `CFlappyGA::think()` : `sortie ≥ seuil → up()`.
 - `CNeurone::eval(a)` : `z = genes[0] + Σ inputs[i]·genes[i]` ; `y = e^{az}/(e^{az}+1)`
   (`a = PENTE_NEURONE = 0.01`). `genes[0]` = biais, `genes[1..]` = poids (objets `CCapteur`).
-- Entraînement GA dans `CGenetic` : tri par `getFitness()` (= `score*100000 + age`),
-  croisement `Flappy::from()`, mutation aléatoire `CNeurone::mute()`. Boucle de sim dans
+- Entraînement GA dans `CGenetic` : tri par `CFlappyGA::getFitness()` (= `score*100000 + age`),
+  croisement `CFlappyGA::from()`, mutation aléatoire `CNeurone::mute()`. Boucle de sim dans
   `MainWindow::onTimer()` : `think → next → collision → markDead`, et `nextGeneration()`
   quand tout le monde est mort.
 
@@ -345,15 +378,17 @@ est de *comprendre exactement* ce qu'on fait) ; il guide, relit, propose des tes
    bascule GA ↔ RL, afficher ε / épisode / score. → regarder apprendre.
 
 ### Fichiers à toucher (au fil des étapes)
-- Nouveaux : `CMlp.h/.cpp` (phase A), `CDqn*.h/.cpp` (phase B) — noms à fixer ensemble.
+- Existants réorganisés : `CFlappy.h/.cpp` (base), `CFlappyGA.h/.cpp` (GA, intact).
+- À créer : `CFlappyRL.h/.cpp` (passe `Common::estFlappyRL` à la base, contient `CMLP*`).
 - `common.h` : constantes (η, γ, ε, tailles de couches, taille du buffer).
-- `flappy.{h,cpp}` : exposer l'état markovien + un mode piloté par le DQN.
 - `mainwindow.{cpp}` + `mainwindow.ui` : bascule GA/RL + labels (étape 8).
-- `qtflappyia.pro` : ajouter les nouveaux fichiers aux SOURCES/HEADERS.
+- `src.pro` : ajouter `CFlappyRL` aux SOURCES/HEADERS.
 
 ### Vérification
 - **Étape 3** : gradient-check numérique (|grad analytique − grad par différences finies| petit).
 - **Phase B** : compiler (`qmake` + `make`), lancer, observer le score RL grimper au fil des
   épisodes et le comparer au GA ; toggle pour basculer à chaud.
 
-> **REPRISE : Phase B, étape 4 — état & récompense.** Claude explique, Corentin code.
+> **REPRISE : Phase B, étape 4 — état & récompense.**
+> Infrastructure prête : `CFlappyRL` à créer, `getVitesse()` public, sprite vert enregistré.
+> Décisions encore à prendre : récompense par tick, récompense mort, valeur de γ.

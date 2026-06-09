@@ -15,6 +15,7 @@ TARGET = qtflappyia
 
 SOURCES += \
     CCapteur.cpp \
+    CFlappyGA.cpp \
     CGenetic.cpp \
     CMLP.cpp \
     CNeurone.cpp \
@@ -23,7 +24,7 @@ SOURCES += \
     CNeuroneRelu.cpp \
     CNeuroneSigmoide.cpp \
     common.cpp \
-    flappy.cpp \
+    CFlappy.cpp \
     main.cpp \
     mainwindow.cpp \
     scenewidget.cpp \
@@ -31,6 +32,7 @@ SOURCES += \
 
 HEADERS += \
     CCapteur.h \
+    CFlappyGA.h \
     CGenetic.h \
     CMLP.h \
     CNeurone.h \
@@ -39,7 +41,7 @@ HEADERS += \
     CNeuroneRelu.h \
     CNeuroneSigmoide.h \
     common.h \
-    flappy.h \
+    CFlappy.h \
     mainwindow.h \
     scenewidget.h \
     tuyau.h

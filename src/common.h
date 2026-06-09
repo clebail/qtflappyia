@@ -28,21 +28,21 @@
 
 class Common {
 public:
-    typedef enum { estFond, estSol, estFlappy, estTuyauHaut, estTuyauBas } ESpriteType;
+    typedef enum { estFond, estSol, estFlappy, estFlappyRL, estTuyauHaut, estTuyauBas } ESpriteType;
 
     typedef struct _SSprite {
         QList<QRect> rects;
     }SSprite;
 
-    static Common * getInstance();
-    QImage getSpritesImage();
+    static Common * getInstance(void);
+    QImage getSpritesImage(void) const;
     QImage getSpriteImage(const ESpriteType& type, int idx = 0) const;
     int getNbSpriteImage(const ESpriteType& type) const;
     QSize getSpriteSize(const ESpriteType& type) const;
-    float getFlappyHypo() const;
-    float getFlappyBaseAngle() const;
+    float getFlappyHypo(void) const;
+    float getFlappyBaseAngle(void) const;
 private:
-    Common();
+    Common(void);
 
     QImage spritesImage;
     QMap<ESpriteType, SSprite> sprites;

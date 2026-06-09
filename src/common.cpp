@@ -3,7 +3,7 @@
 
 static Common *instance = nullptr;
 
-Common * Common::getInstance() {
+Common * Common::getInstance(void) {
     if(instance == nullptr) {
         instance = new Common();
     }
@@ -11,11 +11,11 @@ Common * Common::getInstance() {
     return instance;
 }
 
-QImage Common::getSpritesImage() {
+QImage Common::getSpritesImage(void) const {
     return spritesImage;
 }
 
-Common::Common() {
+Common::Common(void) {
     SSprite fond, sol, flappy, tuyauHaut, tuyauBas;
 
     spritesImage = QImage(":/images/flappy.png");
@@ -29,6 +29,12 @@ Common::Common() {
     flappy.rects.append(QRect(771, 121, FLAPPY_WIDTH, FLAPPY_HEIGHT));
     flappy.rects.append(QRect(729, 121, FLAPPY_WIDTH, FLAPPY_HEIGHT));
 
+    SSprite flappyRL;
+    flappyRL.rects.append(QRect(688, 150, FLAPPY_WIDTH, FLAPPY_HEIGHT));
+    flappyRL.rects.append(QRect(729, 150, FLAPPY_WIDTH, FLAPPY_HEIGHT));
+    flappyRL.rects.append(QRect(771, 150, FLAPPY_WIDTH, FLAPPY_HEIGHT));
+    flappyRL.rects.append(QRect(729, 150, FLAPPY_WIDTH, FLAPPY_HEIGHT));
+
     tuyauHaut.rects.append(QRect(568, 117, 53, TUYAU_HEIGHT));
 
     tuyauBas.rects.append(QRect(624, 117, 53, TUYAU_HEIGHT));
@@ -36,6 +42,7 @@ Common::Common() {
     sprites.insert(Common::estFond, fond);
     sprites.insert(Common::estSol, sol);
     sprites.insert(Common::estFlappy, flappy);
+    sprites.insert(Common::estFlappyRL, flappyRL);
     sprites.insert(Common::estTuyauHaut, tuyauHaut);
     sprites.insert(Common::estTuyauBas, tuyauBas);
 
@@ -59,10 +66,10 @@ QSize Common::getSpriteSize(const ESpriteType& type) const {
     return sprites.value(type).rects[0].size();
 }
 
-float Common::getFlappyHypo() const {
+float Common::getFlappyHypo(void) const {
     return flappyHypo;
 }
 
-float Common::getFlappyBaseAngle() const {
+float Common::getFlappyBaseAngle(void) const {
     return flappyBaseAngle;
 }

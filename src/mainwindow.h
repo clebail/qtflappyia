@@ -11,7 +11,7 @@ class MainWindow : public QMainWindow, private Ui::MainWindow {
 
 public:
     MainWindow(QWidget *parent = nullptr);
-    ~MainWindow();
+    ~MainWindow(void);
 
 private:
     QTimer *timer;
@@ -19,11 +19,11 @@ private:
     QList<Tuyau *> tuyaux;
     int xSol;
 
-    int calculYT() const;
-    void resetTuyaux();
+    int calculYT(void) const;
+    void resetTuyaux(void);
 
 private slots:
-    void onTimer();
+    void onTimer(void);
     void onYsolChange(int ySol);
 };
 

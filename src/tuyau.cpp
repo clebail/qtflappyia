@@ -11,11 +11,11 @@ Tuyau::Tuyau(const Common::ESpriteType &type, int x, int y) {
 
 }
 
-void Tuyau::next() {
+void Tuyau::next(void) {
     x--;
 }
 
-int Tuyau::getY() const {
+int Tuyau::getY(void) const {
     return y;
 }
 
@@ -26,7 +26,7 @@ void Tuyau::setY(int y) {
     }
 }
 
-int Tuyau::getX() const {
+int Tuyau::getX(void) const {
     return x;
 }
 
@@ -34,14 +34,14 @@ void Tuyau::setX(int x) {
     this->x = x;
 }
 
-QImage Tuyau::getImage() const {
+QImage Tuyau::getImage(void) const {
     return common->getSpriteImage(type);
 }
 
-QSize Tuyau::getSize() const {
+QSize Tuyau::getSize(void) const {
      return common->getSpriteSize(type);
 }
 
-Common::ESpriteType Tuyau::getType() const {
+Common::ESpriteType Tuyau::getType(void) const {
     return type;
 }

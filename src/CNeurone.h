@@ -10,7 +10,7 @@ public:
 
     void setInputs(double *inputs);
     virtual double eval(void) = 0;
-    int getNbGene(void);
+    int getNbGene(void) const;
 
     void initGenes(void);
     void backward(double delta, double eta, double *gradInputs = nullptr);

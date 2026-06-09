@@ -5,20 +5,20 @@
 CGenetic::CGenetic(int popSize, int startX, int startY, int ySol)
     : popSize(popSize), generation(1), allTimeBestScore(0) {
     for (int i = 0; i < popSize; i++) {
-        population << new Flappy(startX, startY, ySol);
+        population << new CFlappyGA(startX, startY, ySol);
     }
 }
 
-CGenetic::~CGenetic() {
-    for (Flappy *f : population) delete f;
+CGenetic::~CGenetic(void) {
+    for (CFlappyGA *f : population) delete f;
 }
 
-QList<Flappy *>& CGenetic::getPopulation() {
+QList<CFlappyGA *>& CGenetic::getPopulation(void) {
     return population;
 }
 
-void CGenetic::triPopulation() {
-    std::sort(population.begin(), population.end(), [](Flappy *a, Flappy *b) {
+void CGenetic::triPopulation(void) {
+    std::sort(population.begin(), population.end(), [](CFlappyGA *a, CFlappyGA *b) {
         return a->getFitness() > b->getFitness();
     });
 }
@@ -26,7 +26,7 @@ void CGenetic::triPopulation() {
 void CGenetic::nextGeneration(int startX, int startY, int ySol) {
     generation++;
 
-    for (Flappy *f : population) {
+    for (CFlappyGA *f : population) {
         allTimeBestScore = qMax(allTimeBestScore, f->getScore());
     }
 
@@ -42,15 +42,15 @@ void CGenetic::nextGeneration(int startX, int startY, int ySol) {
     }
 
     // Tout le monde repart à zéro (position + état), neurone conservé
-    for (Flappy *f : population) {
+    for (CFlappyGA *f : population) {
         f->reset(startX, startY, ySol);
     }
 }
 
-int CGenetic::getGeneration() const {
+int CGenetic::getGeneration(void) const {
     return generation;
 }
 
-int CGenetic::getAllTimeBestScore() const {
+int CGenetic::getAllTimeBestScore(void) const {
     return allTimeBestScore;
 }

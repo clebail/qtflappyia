@@ -12,24 +12,24 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     connect(checkSensors, SIGNAL(toggled(bool)), sceneWidget, SLOT(setShowSensors(bool)));
 
     ga = new CGenetic(TAILLE_POPULATION, FLAPPY_START_X, FLAPPY_START_Y, sceneWidget->getYSol());
-    sceneWidget->setFlappys(ga->getPopulation());
+    sceneWidget->setCFlappys(ga->getPopulation());
 
     resetTuyaux();
     timer->start();
 }
 
-MainWindow::~MainWindow() {
+MainWindow::~MainWindow(void) {
     delete ga;
     for (Tuyau *t : tuyaux) delete t;
 }
 
-int MainWindow::calculYT() const {
+int MainWindow::calculYT(void) const {
     int offset = TUYAU_GAP;
     int espace = SCENE_HEIGHT - SOL_HEIGHT;
     return (rand() % (espace - offset)) + offset;
 }
 
-void MainWindow::resetTuyaux() {
+void MainWindow::resetTuyaux(void) {
     for (Tuyau *t : tuyaux) delete t;
     tuyaux.clear();
 
@@ -39,7 +39,7 @@ void MainWindow::resetTuyaux() {
     sceneWidget->setTuyaux(tuyaux);
 }
 
-void MainWindow::onTimer() {
+void MainWindow::onTimer(void) {
     xSol = (xSol + 1) % SOL_OFFSET;
     int yT = calculYT();
 
@@ -66,9 +66,9 @@ void MainWindow::onTimer() {
     // Traitement de chaque piaf
     int aliveCount = 0;
     int bestCurrentScore = 0;
-    QList<Flappy *>& pop = ga->getPopulation();
+    QList<CFlappyGA *>& pop = ga->getPopulation();
 
-    for (Flappy *f : pop) {
+    for (CFlappyGA *f : pop) {
         if (f->isDead()) continue;
 
         f->think(tuyaux);
@@ -83,7 +83,7 @@ void MainWindow::onTimer() {
     // Score : quand le bord droit d'un tuyau bas passe le bord gauche du piaf
     for (Tuyau *t : tuyaux) {
         if (t->getType() == Common::estTuyauBas && t->getX() + t->getSize().width() == FLAPPY_START_X) {
-            for (Flappy *f : pop) {
+            for (CFlappyGA *f : pop) {
                 if (!f->isDead()) f->incScore();
             }
         }
@@ -98,7 +98,7 @@ void MainWindow::onTimer() {
     // Nouvelle génération si tout le monde est mort
     if (aliveCount == 0) {
         ga->nextGeneration(FLAPPY_START_X, FLAPPY_START_Y, sceneWidget->getYSol());
-        sceneWidget->setFlappys(ga->getPopulation());
+        sceneWidget->setCFlappys(ga->getPopulation());
         resetTuyaux();
     }
 
@@ -107,7 +107,7 @@ void MainWindow::onTimer() {
 }
 
 void MainWindow::onYsolChange(int ySol) {
-    for (Flappy *f : ga->getPopulation()) {
+    for (CFlappyGA *f : ga->getPopulation()) {
         f->setYSol(ySol);
     }
 }

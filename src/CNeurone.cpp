@@ -18,7 +18,7 @@ void CNeurone::setInputs(double *inputs) {
     memcpy(this->inputs, inputs, (nbGene - 1) * sizeof(double));
 }
 
-int CNeurone::getNbGene(void) {
+int CNeurone::getNbGene(void) const {
     return nbGene;
 }
 

@@ -9,15 +9,15 @@ class Tuyau : public QObject {
 public:
     Tuyau(const Common::ESpriteType& type, int x, int y);
 
-    void next();
-    int getY() const;
+    void next(void);
+    int getY(void) const;
     void setY(int y);
-    int getX() const;
+    int getX(void) const;
     void setX(int x);
 
-    QImage getImage() const;
-    QSize getSize() const;
-    Common::ESpriteType getType() const;
+    QImage getImage(void) const;
+    QSize getSize(void) const;
+    Common::ESpriteType getType(void) const;
 private:
     Common *common;
     Common::ESpriteType type;
