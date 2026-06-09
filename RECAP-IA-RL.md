@@ -256,13 +256,31 @@ CNeurone (base, eval() pure virtuelle, backward(), getGene/setGene)
 - `backward(action, cible, eta)` : backprop complète 2 couches
   - couche sortie : `erreur = sortie[action] - cible`, mise à jour poids
   - couche cachée : `erreur_cachée[i] = gradInputs[i] * (z[i] > 0 ? 1 : 0)`, mise à jour poids
-- Accesseurs : `getQ(i)`, `getSortieCache(i)`, `getNeuroneSortie(i)`, `getNeuroneCache(i)`
+- Accesseurs : `getQ(i)` **public** (API de prod) ; `getSortieCache(i)`, `getNeuroneSortie(i)`,
+  `getNeuroneCache(i)` passés **`private`** + `friend class TestCMLP;` (réservés au test white-box).
 
-**Gradient-check :** `checkGradient()` dans `main.cpp` — diff analytique/numérique = 2×10⁻⁸ ✓
+**Gradient-check : ✅ promu en vrai test unitaire Qt (dette technique close).**
+- `checkGradient()` de `main.cpp` **supprimé** ; remplacé par `tests/TestCMLP` (Qt Test).
+- Le test valide **tous les poids** du réseau (biais + poids, couche sortie + cachée) en
+  **un seul parcours à plat**, et **interroge `backward()` lui-même** via l'astuce
+  `grad_analytique = (poids_avant − poids_après) / η` (donc indépendant de toute formule
+  recodée à la main). Gradient numérique = différence centrée sur `L = ½(Q[action] − cible)²`.
+  Tous passent (`make check` vert).
+- ⚠️ Pièges rencontrés (pour mémoire) : le numérique doit utiliser **exactement** la perte
+  qu'implique `backward` (le **½** sinon facteur 2) ; remettre `idxGene = 0` avant chaque boucle.
 
-**À faire avant de reprendre (dette technique) :**
-- Tester quelques poids supplémentaires dans `checkGradient` (un poids non-biais de la sortie,
-  un biais caché, un poids caché) et en faire un vrai test unitaire Qt.
+**Réorganisation du dépôt (structure `subdirs`) :**
+```
+qtflappyia/
+├── qtflappyia.pro      (chapeau : TEMPLATE=subdirs, SUBDIRS = src tests, tests.depends=src)
+├── src/   src.pro      (l'app ; TARGET = qtflappyia)  + tous les .cpp/.h/.ui/.qrc/icônes
+└── tests/ tests.pro    (Qt Test : QT+=testlib, compile TestCMLP.cpp + les ../src/*.cpp utiles)
+```
+Build depuis la racine : `qmake && make` ; lancer le test : `make check` (ou `./tests/tests`).
+
+**Reste optionnel (non bloquant) :** durcir le test en bouclant sur `action ∈ {0,1}` et
+quelques jeux d'`inputs` (positifs/négatifs) → couvre le 2e neurone de sortie et des ReLU
+éteints (`z<0`).
 
 **Prochaine étape : Phase B — étape 4 (état & récompense).**
 
