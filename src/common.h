@@ -26,6 +26,19 @@
 #define FLAPPY_WIDTH2       (FLAPPY_WIDTH/2.0)
 #define FLAPPY_HEIGHT2      (FLAPPY_HEIGHT/2.0)
 
+// RL
+#define RL_GAMMA            0.99
+#define RL_REWARD_TICK      1.0
+#define RL_REWARD_DEAD      -10.0
+#define RL_EPSILON_START    1.0
+#define RL_EPSILON_MIN      0.05
+#define RL_EPSILON_DECAY    0.995
+#define RL_NB_HIDDEN        16
+#define RL_ETA              0.0003
+#define RL_BUFFER_SIZE      10000
+#define RL_TARGET_UPDATE    500
+#define RL_REWARD_PIPE      10.0
+
 class Common {
 public:
     typedef enum { estFond, estSol, estFlappy, estFlappyRL, estTuyauHaut, estTuyauBas } ESpriteType;

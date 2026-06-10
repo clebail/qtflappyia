@@ -17,10 +17,11 @@ public:
     int act(void) const;
     void backward(int action, double cible, double eta);
     double getQ(int i) const;
+    void copyGenesFromOther(CMLP *other);
 private:
-    CNeuroneRelu *neuronesCaches[FLAPPY_NB_HIDDEN];
+    CNeuroneRelu *neuronesCaches[RL_NB_HIDDEN];
     CNeuroneLineaire *neuronesSortie[NB_OUT];
-    double sortieCaches[FLAPPY_NB_HIDDEN];
+    double sortieCaches[RL_NB_HIDDEN];
     double sortie[NB_OUT];
 
     double getSortieCache(int i) const;

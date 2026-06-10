@@ -16,6 +16,7 @@ TARGET = qtflappyia
 SOURCES += \
     CCapteur.cpp \
     CFlappyGA.cpp \
+    CFlappyRL.cpp \
     CGenetic.cpp \
     CMLP.cpp \
     CNeurone.cpp \
@@ -33,6 +34,7 @@ SOURCES += \
 HEADERS += \
     CCapteur.h \
     CFlappyGA.h \
+    CFlappyRL.h \
     CGenetic.h \
     CMLP.h \
     CNeurone.h \

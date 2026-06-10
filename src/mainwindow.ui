@@ -73,6 +73,46 @@
         </widget>
        </item>
        <item>
+        <widget class="QLabel" name="labelRLSep">
+         <property name="text">
+          <string>--- RL ---</string>
+         </property>
+         <property name="font">
+          <font>
+           <bold>true</bold>
+          </font>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="labelRLEpisode">
+         <property name="text">
+          <string>RL épisode: 0</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="labelRLScore">
+         <property name="text">
+          <string>RL score: 0</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="labelRLBestScore">
+         <property name="text">
+          <string>RL meilleur score: 0</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="labelRLEpsilon">
+         <property name="text">
+          <string>RL ε: 1.000</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QCheckBox" name="checkSensors">
          <property name="text">
           <string>Afficher capteurs</string>

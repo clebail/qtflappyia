@@ -5,6 +5,7 @@
 #include <QTimer>
 #include "ui_mainwindow.h"
 #include "CGenetic.h"
+#include "CFlappyRL.h"
 
 class MainWindow : public QMainWindow, private Ui::MainWindow {
     Q_OBJECT
@@ -18,6 +19,7 @@ private:
     CGenetic *ga;
     QList<Tuyau *> tuyaux;
     int xSol;
+    CFlappyRL *flappyRL;
 
     int calculYT(void) const;
     void resetTuyaux(void);

@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include "CFlappyGA.h"
+#include "CFlappyRL.h"
 #include "tuyau.h"
 
 #define SOL_OFFSET      13
@@ -12,6 +13,7 @@ class SceneWidget : public QWidget {
 public:
     explicit SceneWidget(QWidget *parent = nullptr);
     void setCFlappys(const QList<CFlappyGA *>& cflappys);
+    void setCFlappyRL(CFlappyRL *flappyRL);
     void setTuyaux(const QList<Tuyau *>& tuyaux);
     int getYSol(void) const;
     int getXSol(void) const;
@@ -32,6 +34,7 @@ private:
     bool showSensors;
     QList<CFlappyGA *> cflappys;
     QList<Tuyau *> tuyaux;
+    CFlappyRL *flappyRL;
 
 signals:
     void ysolChange(int ySol);

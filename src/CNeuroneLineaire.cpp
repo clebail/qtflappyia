@@ -1,3 +1,4 @@
+#include <math.h>
 #include "CNeuroneLineaire.h"
 
 CNeuroneLineaire::CNeuroneLineaire(int nbGene) : CNeurone(nbGene) {

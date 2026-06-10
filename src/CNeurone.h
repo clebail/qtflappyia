@@ -13,6 +13,7 @@ public:
     int getNbGene(void) const;
 
     void initGenes(void);
+    void initGenesSmall(void);
     void backward(double delta, double eta, double *gradInputs = nullptr);
     double getGene(int idxGene) const;
     void setGene(int idxGene, double value);

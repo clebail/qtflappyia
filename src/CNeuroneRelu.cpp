@@ -1,3 +1,4 @@
+#include <math.h>
 #include "CNeuroneRelu.h"
 
 CNeuroneRelu::CNeuroneRelu(int nbGene) : CNeurone(nbGene) {

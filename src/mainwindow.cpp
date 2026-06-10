@@ -6,13 +6,16 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     xSol = 0;
 
     timer = new QTimer(this);
-    timer->setInterval(10);
+    timer->setInterval(1);
     connect(timer, SIGNAL(timeout()), this, SLOT(onTimer()));
     connect(sceneWidget, SIGNAL(ysolChange(int)), this, SLOT(onYsolChange(int)));
     connect(checkSensors, SIGNAL(toggled(bool)), sceneWidget, SLOT(setShowSensors(bool)));
 
     ga = new CGenetic(TAILLE_POPULATION, FLAPPY_START_X, FLAPPY_START_Y, sceneWidget->getYSol());
+    flappyRL = new CFlappyRL(FLAPPY_START_X, FLAPPY_START_Y, sceneWidget->getYSol());
+
     sceneWidget->setCFlappys(ga->getPopulation());
+    sceneWidget->setCFlappyRL(flappyRL);
 
     resetTuyaux();
     timer->start();
@@ -20,6 +23,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 
 MainWindow::~MainWindow(void) {
     delete ga;
+    delete flappyRL;
+
     for (Tuyau *t : tuyaux) delete t;
 }
 
@@ -63,7 +68,7 @@ void MainWindow::onTimer(void) {
         }
     }
 
-    // Traitement de chaque piaf
+    // Traitement de chaque piaf GA
     int aliveCount = 0;
     int bestCurrentScore = 0;
     QList<CFlappyGA *>& pop = ga->getPopulation();
@@ -86,7 +91,21 @@ void MainWindow::onTimer(void) {
             for (CFlappyGA *f : pop) {
                 if (!f->isDead()) f->incScore();
             }
+
+            if(!flappyRL->isDead()) flappyRL->incScore();
         }
+    }
+
+    // Traitement du piaf RL
+    if(!flappyRL->isDead()) {
+        flappyRL->think(tuyaux);
+        bool died = !flappyRL->next() || flappyRL->toucheUnTuyau(tuyaux);
+        if (died) flappyRL->markDead();
+        flappyRL->afterStep(died, tuyaux);
+        //if (flappyRL->isDead()) {
+
+        //    resetTuyaux();
+        //}
     }
 
     // Mise à jour des labels
@@ -94,11 +113,16 @@ void MainWindow::onTimer(void) {
     labelAlive->setText(QString("Vivants: %1 / %2").arg(aliveCount).arg(TAILLE_POPULATION));
     labelBestScore->setText(QString("Meilleur score: %1").arg(ga->getAllTimeBestScore()));
     labelCurScore->setText(QString("Score actuel: %1").arg(bestCurrentScore));
+    labelRLEpisode->setText(QString("RL épisode: %1").arg(flappyRL->getEpisode()));
+    labelRLScore->setText(QString("RL score: %1").arg(flappyRL->getScore()));
+    labelRLBestScore->setText(QString("RL meilleur score: %1").arg(flappyRL->getBestScore()));
+    labelRLEpsilon->setText(QString("RL ε: %1").arg(QString::number(flappyRL->getEpsilon(), 'f', 3)));
 
     // Nouvelle génération si tout le monde est mort
-    if (aliveCount == 0) {
+    if (aliveCount == 0 && flappyRL->isDead()) {
         ga->nextGeneration(FLAPPY_START_X, FLAPPY_START_Y, sceneWidget->getYSol());
         sceneWidget->setCFlappys(ga->getPopulation());
+        flappyRL->reset(FLAPPY_START_X, FLAPPY_START_Y, sceneWidget->getYSol());
         resetTuyaux();
     }
 
@@ -110,4 +134,5 @@ void MainWindow::onYsolChange(int ySol) {
     for (CFlappyGA *f : ga->getPopulation()) {
         f->setYSol(ySol);
     }
+    flappyRL->setYSol(ySol);
 }

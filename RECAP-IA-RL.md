@@ -235,7 +235,7 @@ interdire de revenir en arrière). `loss='cosine_proximity'` aussi inadapté.
 
 ## 7. Où on en est & prochaines étapes
 
-**Phase actuelle : Phase A terminée, Phase B à démarrer.**
+**Phase actuelle : Phase A ✅ TERMINÉE — Phase B ✅ TERMINÉE.**
 
 ### Ce qui est codé (branche `resolve-gradient`)
 
@@ -250,7 +250,7 @@ CNeurone (base, eval() pure virtuelle, backward(), getGene/setGene)
 `CCapteur` enrichi de `setValue()`. Le GA existant est **intact**.
 
 **`CMLP` — le réseau gradient :**
-- Architecture : 12 entrées → 4 `CNeuroneRelu` cachés → 2 `CNeuroneLineaire` sorties
+- Architecture : 12 entrées → `RL_NB_HIDDEN=16` `CNeuroneRelu` cachés → 2 `CNeuroneLineaire` sorties
 - `forward(inputs[])` : calcule et cache `sortieCaches[]` et `sortie[]`
 - `act()` : argmax sur `sortie[]` → action 0 (rien) ou 1 (battre)
 - `backward(action, cible, eta)` : backprop complète 2 couches
@@ -299,7 +299,7 @@ quelques jeux d'`inputs` (positifs/négatifs) → couvre le 2e neurone de sortie
 ```
 CFlappy   (base abstraite : physique, capteurs, getImage via spriteType)
 ├── CFlappyGA  (+ CNeuroneGA, think GA, from, getFitness)
-└── CFlappyRL  (à créer — CMLP + DQN)
+└── CFlappyRL  (CMLP + DQN) ✅
 ```
 - `CFlappy(int x, int y, int ySol, Common::ESpriteType spriteType)` : le type de sprite
   est passé au constructeur de base (pas de virtuelle pure dans le constructeur).
@@ -365,17 +365,17 @@ est de *comprendre exactement* ce qu'on fait) ; il guide, relit, propose des tes
 3. **Backprop vers la couche cachée.** ✅ `erreur_cachée[i] = gradInputs[i] * relu'(z[i])` ;
    gradient-check : diff = 2×10⁻⁸. ← brique 1 close.
 
-**Phase B — Brique 2 concrète : Q-learning sur Flappy**
-4. **État & récompense.** État markovien (+ vitesse), actions {rien, battre}, shaping de
-   récompense, γ. Trancher : état compact (dx, dy au trou, vitesse, y) vs 11 rayons.
-5. **Q-valeurs & cible de Bellman.** Sortie = 2 Q-valeurs ; cible `y = r + γ·max Q(s',a')`
-   (ou `y = r` si mort). → câbler `act()` ε-greedy + le calcul de la cible.
-6. **Le pas d'apprentissage.** Perte `½(Q(s,a) − y)²`, backprop sur la **seule action jouée**.
-   → coder `learn()` en réutilisant le backward de l'MLP.
-7. **Stabilité.** Replay buffer (ring) + réseau-cible copié périodiquement, et *pourquoi*
-   (décorrélation i.i.d. ; cible non mouvante). → ajouter le buffer + la copie.
-8. **Intégration & UI.** Piloter un piaf épisode par épisode dans `MainWindow::onTimer`,
-   bascule GA ↔ RL, afficher ε / épisode / score. → regarder apprendre.
+**Phase B — Brique 2 concrète : Q-learning sur Flappy** ✅ TERMINÉE
+4. **État & récompense.** ✅ Mêmes 12 entrées que le GA (comparaison à iso). Constantes :
+   `RL_GAMMA=0.99`, `RL_REWARD_TICK=1.0`, `RL_REWARD_DEAD=-10.0`, `RL_REWARD_PIPE=10.0`.
+5. **Q-valeurs & cible de Bellman.** ✅ `actEpsilonGreedy()` (tirage vs argmax + décroissance
+   ε par épisode) ; `computeTarget()` utilise `mlpTarget` pour `max Q(s',a')`.
+6. **Le pas d'apprentissage.** ✅ `learn()` : `computeTarget` → re-forward sur `s` → `backward`.
+   Ordre critique : `computeTarget` écrase le cache avec `s'`, le re-forward le remet sur `s`.
+7. **Stabilité.** ✅ Replay buffer circulaire `RL_BUFFER_SIZE=10000` ; réseau-cible copié tous
+   les `RL_TARGET_UPDATE=500` steps. Batch=32 transitions aléatoires par tick.
+8. **Intégration & UI.** ✅ `think()` + `afterStep(bool died, tuyaux)` dans la boucle
+   `onTimer`. Labels : RL épisode / score / meilleur score / ε. Timer à 1ms pour accélérer.
 
 ### Fichiers à toucher (au fil des étapes)
 - Existants réorganisés : `CFlappy.h/.cpp` (base), `CFlappyGA.h/.cpp` (GA, intact).
@@ -389,6 +389,93 @@ est de *comprendre exactement* ce qu'on fait) ; il guide, relit, propose des tes
 - **Phase B** : compiler (`qmake` + `make`), lancer, observer le score RL grimper au fil des
   épisodes et le comparer au GA ; toggle pour basculer à chaud.
 
-> **REPRISE : Phase B, étape 4 — état & récompense.**
-> Infrastructure prête : `CFlappyRL` à créer, `getVitesse()` public, sprite vert enregistré.
-> Décisions encore à prendre : récompense par tick, récompense mort, valeur de γ.
+> **REPRISE : Phase C — DeepCubeA sur `~/dev/clbrub`.**
+> Les deux briques sont comprises et implémentées. Prochaine étape : cube numpy (Phase 0 de la roadmap §6).
+
+---
+
+## 9. Phase B — Résultats, pièges et conclusion
+
+### Architecture finale de `CFlappyRL`
+
+```
+CFlappyRL : public CFlappy
+├── CMLP *mlp          (réseau entraîné)
+├── CMLP *mlpTarget    (réseau-cible, copié depuis mlp tous les RL_TARGET_UPDATE steps)
+├── STransition buffer[RL_BUFFER_SIZE]   (ring buffer)
+├── think(tuyaux)      : forward → save lastInputs/lastAction → actEpsilonGreedy → up()
+└── afterStep(died, tuyaux) :
+      1. Construit inputsNext[]
+      2. reward = RL_REWARD_TICK (ou DEAD si died, + PIPE si score augmente)
+      3. pushTransition()
+      4. si died : bestScore = max(bestScore, score) ; lastScore=0 ; episode++ ; ε decay
+      5. batch=32 : learn() sur transitions aléatoires du buffer
+      6. maybeUpdateTarget()
+```
+
+### Constantes (common.h)
+
+```cpp
+#define RL_NB_HIDDEN        16
+#define RL_GAMMA            0.99
+#define RL_REWARD_TICK      1.0
+#define RL_REWARD_DEAD      -10.0
+#define RL_REWARD_PIPE      10.0
+#define RL_EPSILON_START    1.0
+#define RL_EPSILON_MIN      0.05
+#define RL_EPSILON_DECAY    0.995     // par épisode (pas par tick)
+#define RL_ETA              0.0003
+#define RL_BUFFER_SIZE      10000
+#define RL_TARGET_UPDATE    500
+```
+
+### Pièges rencontrés (à retenir)
+
+1. **`CCapteur::init()` initialise les poids dans [-25, 25]** — conçu pour le GA, catastrophique
+   pour ReLU (neurones morts ou sorties explosives). Fix : `CNeurone::initGenesSmall()` →
+   valeurs dans [-0.1, 0.1], appelé dans `CMLP::CMLP()`.
+
+2. **Division entière dans ε-greedy** : `rand() / RAND_MAX` = toujours 0 (int/int).
+   Fix : `(double)rand() / RAND_MAX`.
+
+3. **`computeTarget()` lisait les Q sur `mlp` après forward sur `mlpTarget`** — les deux
+   lignes doivent utiliser `mlpTarget`.
+
+4. **`pushTransition()` utilisait `qMax` au lieu de `qMin`** pour plafonner `bufferSize`.
+
+5. **`FLAPPY_NB_HIDDEN` vs `RL_NB_HIDDEN` dans `CMLP::CMLP()`** — seul le constructeur avait
+   été oublié, les 12 autres slots du tableau étaient des pointeurs non initialisés.
+
+6. **`lastScore` non remis à 0 en fin d'épisode** → la récompense pipe ne se déclenchait que
+   quand le score dépassait celui du dernier épisode. Fix : `lastScore = 0` quand `died`.
+
+7. **Décroissance ε par tick vs par épisode** : avec des épisodes courts (~60 ticks),
+   `DECAY=0.9995` par tick consomme l'exploration en 100 épisodes. Switché en décroissance
+   par épisode avec `DECAY=0.995` → epsilon atteint 0.05 après ~600 épisodes.
+
+8. **`stepCount` non incrémenté dans `maybeUpdateTarget()`** → cible mise à jour à chaque appel.
+
+### Résultats de la comparaison GA vs DQN
+
+| Métrique | GA | DQN |
+|---|---|---|
+| Génération / épisodes | 60 générations | ~5000 épisodes |
+| Meilleur score | **100+** | **8** |
+| Vitesse d'apprentissage | Très rapide | Lent |
+| Variance par épisode | Faible (population stable) | Forte |
+
+### Conclusion
+
+Le résultat confirme exactement la théorie du §4 :
+
+- Flappy Bird = **récompense dense** (+1/tick) → le GA évalue des politiques entières avec
+  une fitness naturelle. Population de 100 → exploration massive en parallèle.
+- Le DQN **fonctionne** (score 8 ≠ 0, politique réelle apprise) mais est structurellement
+  désavantagé sur ce problème.
+- **Ce prototype n'était pas fait pour battre le GA sur Flappy**. Il était fait pour comprendre
+  et implémenter backprop + Bellman avant d'attaquer le vrai problème :
+
+> Le Rubik's cube a une récompense **sparse** (0 partout sauf à l'état résolu).
+> Le GA s'y effondre (fitness = 0 partout, rien à sélectionner).
+> Le RL / DeepCubeA est **indispensable** : Bellman propage la valeur depuis l'état résolu
+> et crée une pente là où il n'y en a pas.

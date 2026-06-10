@@ -28,6 +28,12 @@ void CNeurone::initGenes(void) {
     }
 }
 
+void CNeurone::initGenesSmall(void) {
+    for (int i = 0; i < nbGene; i++) {
+        genes[i].setValue(((double)(rand() % 2001) - 1000) / 10000.0);
+    }
+}
+
 void CNeurone::backward(double delta, double eta, double *gradInputs) {
     genes[0].setValue(genes[0].getValue() - eta * delta);
     for (int i = 1; i < nbGene; i++) {

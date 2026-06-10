@@ -25,7 +25,7 @@ void TestCMLP::testGradient(void) {
 
     nbGenes += cmlp->getNeuroneSortie(action)->getNbGene();
     neurones << cmlp->getNeuroneSortie(action);
-    for(int i=0;i<FLAPPY_NB_HIDDEN;i++) {
+    for(int i=0;i<RL_NB_HIDDEN;i++) {
         nbGenes += cmlp->getNeuroneCache(i)->getNbGene();
         neurones << cmlp->getNeuroneCache(i);
     }

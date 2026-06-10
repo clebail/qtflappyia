@@ -12,10 +12,15 @@ SceneWidget::SceneWidget(QWidget *parent) : QWidget(parent) {
     xSol = 0;
     ySol = height() - SOL_HEIGHT;
     showSensors = false;
+    flappyRL = nullptr;
 }
 
 void SceneWidget::setCFlappys(const QList<CFlappyGA *>& cflappys) {
     this->cflappys = cflappys;
+}
+
+void SceneWidget::setCFlappyRL(CFlappyRL *flappyRL) {
+    this->flappyRL = flappyRL;
 }
 
 void SceneWidget::setTuyaux(const QList<Tuyau *>& tuyaux) {
@@ -78,6 +83,30 @@ void SceneWidget::paintEvent(QPaintEvent *) {
             painter.drawEllipse(f->getBotomRight(), 4, 4);
             painter.drawEllipse(f->getTopLeft(), 4, 4);
             painter.drawEllipse(f->getBotomLeft(), 4, 4);
+            for(int j=0;j<sensors.size();j++) {
+                QPair<QPoint, QPoint> p = sensors[j];
+                painter.drawLine(p.first, p.second);
+            }
+        }
+    }
+
+    if(flappyRL != nullptr && !flappyRL->isDead()) {
+        QImage img = flappyRL->getImage();
+
+        painter.save();
+        painter.translate(QPoint(flappyRL->getX() + ox, flappyRL->getY() + oy));
+        painter.rotate(flappyRL->getAngle());
+        painter.drawImage(QPoint(-ox, -oy), img, QRect(0, 0, FLAPPY_WIDTH, img.height()));
+        painter.restore();
+
+        if (showSensors) {
+            QList<QPair<QPoint, QPoint>> sensors = flappyRL->getSensors(tuyaux);
+            painter.setPen(QColorConstants::Red);
+            painter.drawEllipse(flappyRL->getTopRight(), 4, 4);
+            painter.drawEllipse(flappyRL->getRight(), 4, 4);
+            painter.drawEllipse(flappyRL->getBotomRight(), 4, 4);
+            painter.drawEllipse(flappyRL->getTopLeft(), 4, 4);
+            painter.drawEllipse(flappyRL->getBotomLeft(), 4, 4);
             for(int j=0;j<sensors.size();j++) {
                 QPair<QPoint, QPoint> p = sensors[j];
                 painter.drawLine(p.first, p.second);

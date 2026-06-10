@@ -47,6 +47,7 @@ void CFlappyGA::think(QList<Tuyau *> tuyaux) {
     QList<QPair<QPoint, QPoint>> sensors = getSensors(tuyaux);
     double inputs[FLAPPY_NB_INPUTS];
     double maxDist = sqrt((double)(SCENE_WIDTH * SCENE_WIDTH + SCENE_HEIGHT * SCENE_HEIGHT));
+
     for (int i = 0; i < FLAPPY_NB_INPUTS - 1; i++) {
         double dx = sensors[i].second.x() - sensors[i].first.x();
         double dy = sensors[i].second.y() - sensors[i].first.y();
