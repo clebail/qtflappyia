@@ -12,6 +12,15 @@ Le tout repose sur deux idées :
 - un **algorithme génétique** joue le rôle de la sélection naturelle (les meilleurs se
   reproduisent, les pires disparaissent).
 
+## 🎥 Voir l'apprentissage en vidéo
+
+Le montage ci-dessous montre, génération après génération, comment la population passe de la
+chute immédiate à la maîtrise complète du jeu :
+
+[![Regarder la vidéo sur YouTube](https://img.youtube.com/vi/pxVKJ6W7yjI/maxresdefault.jpg)](https://www.youtube.com/watch?v=pxVKJ6W7yjI)
+
+▶️ **[Une IA apprend à jouer à Flappy Bird toute seule](https://www.youtube.com/watch?v=pxVKJ6W7yjI)**
+
 ---
 
 ## Comment « pense » un piaf
