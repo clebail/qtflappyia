@@ -4,9 +4,12 @@
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     setupUi(this);
     xSol = 0;
+    tickCount = 0;
+    frameIndex = 0;
+    genInteressante = false;
 
     timer = new QTimer(this);
-    timer->setInterval(10);
+    timer->setInterval(2);
     connect(timer, SIGNAL(timeout()), this, SLOT(onTimer()));
     connect(sceneWidget, SIGNAL(ysolChange(int)), this, SLOT(onYsolChange(int)));
     connect(checkSensors, SIGNAL(toggled(bool)), sceneWidget, SLOT(setShowSensors(bool)));
@@ -66,6 +69,7 @@ void MainWindow::onTimer() {
     // Traitement de chaque piaf
     int aliveCount = 0;
     int bestCurrentScore = 0;
+    bool bestMortScore = false;
     QList<Flappy *>& pop = ga->getPopulation();
 
     for (Flappy *f : pop) {
@@ -74,11 +78,16 @@ void MainWindow::onTimer() {
         f->think(tuyaux);
         if (!f->next() || f->toucheUnTuyau(tuyaux)) {
             f->markDead();
+            if (f->getScore() > 100) bestMortScore = true;
         } else {
             aliveCount++;
             bestCurrentScore = qMax(bestCurrentScore, f->getScore());
         }
     }
+
+    // Pendant la generation, getAllTimeBestScore() = record des generations precedentes.
+    // Si on le depasse, cette generation merite d'etre filmee.
+    if (bestCurrentScore > ga->getAllTimeBestScore()) genInteressante = true;
 
     // Score : quand le bord droit d'un tuyau bas passe le bord gauche du piaf
     for (Tuyau *t : tuyaux) {
@@ -95,15 +104,41 @@ void MainWindow::onTimer() {
     labelBestScore->setText(QString("Meilleur score: %1").arg(ga->getAllTimeBestScore()));
     labelCurScore->setText(QString("Score actuel: %1").arg(bestCurrentScore));
 
-    // Nouvelle génération si tout le monde est mort
+    sceneWidget->setXSol(xSol);
+    sceneWidget->setStats(ga->getGeneration(), aliveCount, TAILLE_POPULATION,
+                          ga->getAllTimeBestScore(), bestCurrentScore);
+    sceneWidget->repaint();
+
+    // On bufferise une frame sur 10 de la generation en cours
+    if (tickCount % 10 == 0) frameBuffer << sceneWidget->grab();
+    tickCount++;
+
+    // Arret de la simu quand le meilleur meurt avec un score > 300
+    if (bestMortScore) {
+        if (genInteressante) flushBuffer();
+        timer->stop();
+        return;
+    }
+
+    // Fin de generation : on garde le film seulement si le record a ete battu
     if (aliveCount == 0) {
+        if (genInteressante) flushBuffer();
+        frameBuffer.clear();
+        genInteressante = false;
+
         ga->nextGeneration(FLAPPY_START_X, FLAPPY_START_Y, sceneWidget->getYSol());
         sceneWidget->setFlappys(ga->getPopulation());
         resetTuyaux();
     }
+}
 
-    sceneWidget->setXSol(xSol);
-    sceneWidget->repaint();
+void MainWindow::flushBuffer() {
+    for (const QPixmap &frame : frameBuffer) {
+        QString nom = QString("images/image_%1.png").arg(frameIndex, 6, 10, QChar('0'));
+        frame.save(nom);
+        frameIndex++;
+    }
+    frameBuffer.clear();
 }
 
 void MainWindow::onYsolChange(int ySol) {

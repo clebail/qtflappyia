@@ -12,6 +12,16 @@ SceneWidget::SceneWidget(QWidget *parent) : QWidget(parent) {
     xSol = 0;
     ySol = height() - SOL_HEIGHT;
     showSensors = false;
+
+    statGeneration = statAlive = statTotal = statBestScore = statCurScore = 0;
+}
+
+void SceneWidget::setStats(int generation, int alive, int total, int bestScore, int curScore) {
+    statGeneration = generation;
+    statAlive = alive;
+    statTotal = total;
+    statBestScore = bestScore;
+    statCurScore = curScore;
 }
 
 void SceneWidget::setFlappys(const QList<Flappy *>& flappys) {
@@ -86,6 +96,37 @@ void SceneWidget::paintEvent(QPaintEvent *) {
     }
 
     painter.drawImage(QRect(0, ySol, width(), SOL_HEIGHT), sol, QRect(xSol, 0, width(), SOL_HEIGHT));
+
+    drawStats(painter);
+}
+
+void SceneWidget::drawStats(QPainter &painter) {
+    QStringList lignes;
+    lignes << QString("Generation : %1").arg(statGeneration);
+    lignes << QString("Vivants : %1 / %2").arg(statAlive).arg(statTotal);
+    lignes << QString("Score actuel : %1").arg(statCurScore);
+    lignes << QString("Meilleur score : %1").arg(statBestScore);
+
+    QFont font = painter.font();
+    font.setPixelSize(16);
+    font.setBold(true);
+    painter.setFont(font);
+
+    int x = 10;
+    int y = 24;
+    int interligne = 22;
+
+    for (int i = 0; i < lignes.size(); i++) {
+        // Contour noir pour la lisibilite sur n'importe quel fond
+        painter.setPen(QColorConstants::Black);
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dy = -1; dy <= 1; dy++) {
+                painter.drawText(x + dx, y + i * interligne + dy, lignes[i]);
+            }
+        }
+        painter.setPen(QColorConstants::White);
+        painter.drawText(x, y + i * interligne, lignes[i]);
+    }
 }
 
 void SceneWidget::resizeEvent(QResizeEvent *event) {

@@ -16,6 +16,7 @@ public:
     int getYSol() const;
     int getXSol() const;
     void setXSol(int xSol);
+    void setStats(int generation, int alive, int total, int bestScore, int curScore);
     ~SceneWidget();
 
 public slots:
@@ -30,8 +31,11 @@ private:
     QImage sol;
     int xSol, ySol, xTuyau;
     bool showSensors;
+    int statGeneration, statAlive, statTotal, statBestScore, statCurScore;
     QList<Flappy *> flappys;
     QList<Tuyau *> tuyaux;
+
+    void drawStats(QPainter &painter);
 
 signals:
     void ysolChange(int ySol);

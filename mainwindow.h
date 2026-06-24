@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QTimer>
+#include <QPixmap>
 #include "ui_mainwindow.h"
 #include "CGenetic.h"
 
@@ -18,9 +19,14 @@ private:
     CGenetic *ga;
     QList<Tuyau *> tuyaux;
     int xSol;
+    int tickCount;
+    int frameIndex;
+    bool genInteressante;
+    QList<QPixmap> frameBuffer;
 
     int calculYT() const;
     void resetTuyaux();
+    void flushBuffer();
 
 private slots:
     void onTimer();
