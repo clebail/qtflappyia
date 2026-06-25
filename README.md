@@ -17,7 +17,7 @@ Le tout repose sur deux idées :
 Le montage ci-dessous montre, génération après génération, comment la population passe de la
 chute immédiate à la maîtrise complète du jeu :
 
-[![Regarder la vidéo sur YouTube](https://img.youtube.com/vi/pxVKJ6W7yjI/maxresdefault.jpg)](https://www.youtube.com/watch?v=pxVKJ6W7yjI)
+[![Regarder la vidéo sur YouTube](https://img.youtube.com/vi/pxVKJ6W7yjI/hqdefault.jpg)](https://www.youtube.com/watch?v=pxVKJ6W7yjI)
 
 ▶️ **[Une IA apprend à jouer à Flappy Bird toute seule](https://www.youtube.com/watch?v=pxVKJ6W7yjI)**
 
